@@ -1,6 +1,5 @@
 import os
 import warnings
-import joblib
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
@@ -13,13 +12,12 @@ st.set_page_config(
     layout="wide",
 )
 NUM_COLS = ["tenure", "MonthlyCharges", "TotalCharges"]
-ARTIFACTS = ["model_pipeline.pkl", "feature_columns.pkl"]
 
 
-def train_and_save():
+@st.cache_resource(show_spinner="First run — training model, please wait...")
+def train_model():
     from sklearn.compose import ColumnTransformer
     from sklearn.linear_model import LogisticRegression
-    from sklearn.metrics import accuracy_score
     from sklearn.model_selection import train_test_split
     from sklearn.pipeline import Pipeline
     from sklearn.preprocessing import OneHotEncoder, StandardScaler
@@ -50,25 +48,7 @@ def train_and_save():
     ])
 
     pipeline.fit(X_train, y_train)
-    accuracy = accuracy_score(y_test, pipeline.predict(X_test))
 
-    # Save artifacts
-    joblib.dump(pipeline, "model_pipeline.pkl")
-    joblib.dump(feature_columns, "feature_columns.pkl")
-    return accuracy
-
-
-
-if not all(os.path.exists(f) for f in ARTIFACTS):
-    with st.spinner("First run — training model, please wait..."):
-        acc = train_and_save()
-    st.success(f"Model trained! Accuracy: {acc:.2%}")
-
-
-@st.cache_resource
-def load_artifacts():
-    pipeline = joblib.load("model_pipeline.pkl")
-    feature_columns = joblib.load("feature_columns.pkl")
     return pipeline, feature_columns
 
 
@@ -79,7 +59,7 @@ def load_data():
     return df
 
 
-pipeline, feature_columns = load_artifacts()
+pipeline, feature_columns = train_model()
 df = load_data()
 
 st.title("Telco Churn")
