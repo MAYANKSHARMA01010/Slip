@@ -12,47 +12,20 @@ st.set_page_config(
     layout="wide",
 )
 NUM_COLS = ["tenure", "MonthlyCharges", "TotalCharges"]
+import os
+import joblib
 
+ARTIFACTS = ["model_pipeline.pkl", "feature_columns.pkl"]
 
-@st.cache_resource(show_spinner="First run — training model, please wait...")
-def train_model():
-    from imblearn.over_sampling import SMOTE
-    from imblearn.pipeline import Pipeline
-    from sklearn.compose import ColumnTransformer
-    from sklearn.linear_model import LogisticRegression
-    from sklearn.model_selection import train_test_split
-    from sklearn.preprocessing import OneHotEncoder, StandardScaler
+if not all(os.path.exists(f) for f in ARTIFACTS):
+    st.error("Model artifacts not found. Please run the notebook first to generate model_pipeline.pkl and feature_columns.pkl.")
+    st.stop()
 
-    df = pd.read_csv("telco_customer_churn.csv").drop(columns=["customerID"])
-    df["TotalCharges"] = df["TotalCharges"].replace({" ": "0.0"}).astype(float)
-    df["Churn"] = df["Churn"].map({"Yes": 1, "No": 0})
-
-    X = df.drop(columns=["Churn"])
-    y = df["Churn"]
-    
-    feature_columns = X.columns.tolist()
-    cat_cols = X.select_dtypes(include=["object"]).columns.tolist()
-
-    X_train, X_test, y_train, y_test = train_test_split(
-        X, y, test_size=0.2, random_state=42
-    )
-
-    preprocessor = ColumnTransformer(
-        transformers=[
-            ("num", StandardScaler(), NUM_COLS),
-            ("cat", OneHotEncoder(handle_unknown="ignore", drop="first"), cat_cols)
-        ])
-
-    pipeline = Pipeline(steps=[
-        ("preprocessor", preprocessor),
-        ("smote", SMOTE(random_state=42)),
-        ("classifier", LogisticRegression(max_iter=1000, random_state=42))
-    ])
-
-    pipeline.fit(X_train, y_train)
-
+@st.cache_resource
+def load_artifacts():
+    pipeline = joblib.load("model_pipeline.pkl")
+    feature_columns = joblib.load("feature_columns.pkl")
     return pipeline, feature_columns
-
 
 @st.cache_data
 def load_data():
@@ -61,7 +34,7 @@ def load_data():
     return df
 
 
-pipeline, feature_columns = train_model()
+pipeline, feature_columns = load_artifacts()
 df = load_data()
 
 st.title("Telco Churn")
