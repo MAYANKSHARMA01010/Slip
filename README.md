@@ -1,5 +1,6 @@
 # Customer Churn Prediction & Agentic Retention Strategy
 ## From Predictive Analytics to Intelligent Intervention
+
 ### Project Overview
 
 Customer churn is one of the biggest challenges telecom companies face today. Losing a customer isn't just about one cancelled subscription; it snowballs into lost revenue, higher acquisition costs, and a weakened brand. This project tackles that problem head on by building an AI powered system that not only predicts which customers are likely to leave, but eventually evolves into an intelligent agent that can suggest personalized retention strategies.
