@@ -31,12 +31,10 @@ Here's a quick look at the tools and technologies powering each part of the proj
 
 | Component | Technology |
 | :--- | :--- |
-| **ML Models (Milestone 1)** | Logistic Regression, Decision Trees, Scikit Learn |
-| **Agent Framework (Milestone 2)** | LangGraph, Chroma/FAISS for RAG |
+| **ML Models** | Logistic Regression, StandardScaler, Scikit Learn |
 | **UI Framework** | Streamlit |
-| **LLMs (Milestone 2)** | Open source models or Free tier APIs |
 | **Data Handling** | Pandas, NumPy |
 | **Visualization** | Matplotlib, Seaborn |
 | **Model Persistence** | Joblib |
 
-We chose **Streamlit** for the frontend because it lets us build interactive dashboards with minimal boilerplate, perfect for quickly turning a machine learning pipeline into something visual and usable. For the ML side, **Scikit Learn** handles everything from preprocessing to model training and evaluation. In Milestone 2, **LangGraph** will orchestrate the agent workflows while **Chroma or FAISS** will power the retrieval augmented generation layer.
+We chose **Streamlit** for the frontend because it lets us build interactive dashboards with minimal boilerplate, perfect for quickly turning a machine learning pipeline into something visual and usable. For the ML side, **Scikit Learn** handles everything from preprocessing to model training and evaluation. **Matplotlib** and **Seaborn** power the charts and visualizations across the dashboard, while **Joblib** takes care of saving and loading the trained model artifacts.
