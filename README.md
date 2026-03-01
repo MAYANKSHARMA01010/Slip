@@ -22,3 +22,21 @@ We worked as a team of **3 to 4 students**, collaborating across data exploratio
 For the agent based components in Milestone 2, **LangGraph** is the recommended framework. It gives us the flexibility to define agent workflows with clean state management and tool integration.
 
 One important rule: the final version of the project **must be hosted and publicly accessible**. A localhost only demo won't be accepted for the end semester submission. We're expected to deploy using platforms like **Hugging Face Spaces**, **Streamlit Cloud**, or **Render** so that anyone with the link can try it out.
+
+---
+
+### Technology Stack
+
+Here's a quick look at the tools and technologies powering each part of the project.
+
+| Component | Technology |
+| :--- | :--- |
+| **ML Models (Milestone 1)** | Logistic Regression, Decision Trees, Scikit Learn |
+| **Agent Framework (Milestone 2)** | LangGraph, Chroma/FAISS for RAG |
+| **UI Framework** | Streamlit |
+| **LLMs (Milestone 2)** | Open source models or Free tier APIs |
+| **Data Handling** | Pandas, NumPy |
+| **Visualization** | Matplotlib, Seaborn |
+| **Model Persistence** | Joblib |
+
+We chose **Streamlit** for the frontend because it lets us build interactive dashboards with minimal boilerplate, perfect for quickly turning a machine learning pipeline into something visual and usable. For the ML side, **Scikit Learn** handles everything from preprocessing to model training and evaluation. In Milestone 2, **LangGraph** will orchestrate the agent workflows while **Chroma or FAISS** will power the retrieval augmented generation layer.
