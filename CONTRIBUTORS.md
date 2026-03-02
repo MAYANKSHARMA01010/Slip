@@ -4,17 +4,38 @@ Meet the core team behind this project! We collaborated across data exploration,
 
 ## Core Team
 
-**[Mayank Sharma](https://github.com/MAYANKSHARMA01010)**  
-![Mayank Sharma](https://github.com/MAYANKSHARMA01010.png?size=150)  
-*Project Head*  
+<!-- markdownlint-disable MD033 -->
+<table align="center">
+  <tr>
+    <td align="center">
+      <a href="https://github.com/MAYANKSHARMA01010">
+        <img src="https://github.com/MAYANKSHARMA01010.png?size=150" width="150" height="150" alt="Mayank Sharma" style="border-radius: 50%; object-fit: cover;"/><br />
+        <br />
+        <b>Mayank Sharma</b>
+      </a><br />
+      <i>Project Head</i>
+    </td>
+    <td align="center">
+      <a href="https://github.com/Ankitgkp">
+        <img src="https://github.com/Ankitgkp.png?size=150" width="150" height="150" alt="Ankit" style="border-radius: 50%; object-fit: cover;"/><br />
+        <br />
+        <b>Ankit</b>
+      </a><br />
+      <i>Project Head</i>
+    </td>
+    <td align="center">
+      <a href="https://github.com/Amansoni045">
+        <img src="https://github.com/Amansoni045.png?size=150" width="150" height="150" alt="Aman Soni" style="border-radius: 50%; object-fit: cover;"/><br />
+        <br />
+        <b>Aman Soni</b>
+      </a><br />
+      <i>Project Head</i>
+    </td>
+  </tr>
+</table>
 
-**[Ankit](https://github.com/Ankitgkp)**  
-![Ankit](https://github.com/Ankitgkp.png?size=150)  
-*Project Head*  
-
-**[Aman Soni](https://github.com/Amansoni045)**  
-![Aman Soni](https://github.com/Amansoni045.png?size=150)  
-*Project Head*  
+<br>
+<!-- markdownlint-restore -->
 
 ## Contributing
 
