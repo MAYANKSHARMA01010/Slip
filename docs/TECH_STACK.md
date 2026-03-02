@@ -95,11 +95,13 @@ Here is a quick overview of the entire repository structure, so you know exactly
 
 ```text
 .
-├── CONTRIBUTORS.md          # Team members and contribution guidelines
+├── docs/                    # Official documentation
+│   ├── CONTRIBUTORS.md      # Team members and contribution guidelines
+│   ├── SCRIPTV1.md          # Video presentation script
+│   ├── SETUP_GUIDE.md       # Step-by-step instructions to clone and run the app
+│   └── TECH_STACK.md        # You are here! Details on weapons of choice
 ├── Project 5_AI_ML.pdf      # Detailed university project report and presentation
 ├── README.md                # Main entry point with project overview and goals
-├── SETUP_GUIDE.md           # Step-by-step instructions to clone and run the app
-├── TECH_STACK.md            # You are here! Details on weapons of choice
 ├── app.py                   # The Streamlit web dashboard source code
 ├── churn.ipynb              # The Jupyter notebook for EDA and model training
 ├── customer_churn_model.pkl # Best trained model saved to disk
