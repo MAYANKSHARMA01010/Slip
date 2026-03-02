@@ -8,7 +8,7 @@ Customer churn is one of the biggest challenges telecom companies face today. Lo
 
 We worked with the **Telco Customer Churn** dataset, which captures real world customer behavior like how long they've been with the company, what services they use, how much they pay, and whether or not they ended up churning. The goal was to dig into this data, find meaningful patterns, and train a model that can flag at risk customers before it's too late.
 
-**Milestone 1** focuses on classical machine learning. We used techniques like Logistic Regression along with thoughtful feature engineering to build a churn prediction pipeline. The results are served through a clean, interactive Streamlit dashboard where users can explore the data visually and even test predictions for individual customers.
+**Milestone 1** focuses on classical machine learning. We built a full preprocessing and modeling pipeline using Scikit Learn, tackled class imbalance with **SMOTE**, and trained both **Logistic Regression** and **XGBoost** classifiers. The results are served through a polished, interactive Streamlit dashboard with a glassmorphism dark theme where users can explore the data visually, predict churn for individual customers, see personalized risk factors and retention recommendations, and even export prediction results as CSV.
 
 **Milestone 2** takes things further by introducing an agent based AI layer. The idea here is to move beyond just predicting churn and actually reason about it. Using frameworks like LangGraph and retrieval augmented generation (RAG), the system will pull in retention best practices and generate structured intervention plans tailored to each customer's situation.
 
@@ -26,22 +26,64 @@ One important rule: the final version of the project **must be hosted and public
 
 ---
 
-We chose **Streamlit** for the frontend because it lets us build interactive dashboards with minimal boilerplate, perfect for quickly turning a machine learning pipeline into something visual and usable. For the ML side, **Scikit Learn** handles everything from preprocessing to model training and evaluation. **Matplotlib** and **Seaborn** power the charts and visualizations across the dashboard, while **Joblib** takes care of saving and loading the trained model artifacts.
+### Technology Stack
+
+Here's a quick summary of the tools and technologies powering each part of the project.
+
+| Component | Technology |
+| :--- | :--- |
+| **ML Models** | Logistic Regression, XGBoost, Scikit Learn Pipeline |
+| **Class Balancing** | SMOTE (Imbalanced Learn) |
+| **UI Framework** | Streamlit (with custom glassmorphism CSS) |
+| **Data Handling** | Pandas, NumPy |
+| **Visualization** | Matplotlib, Seaborn |
+| **Model Persistence** | Joblib |
+
+We chose **Streamlit** for the frontend because it lets us build interactive dashboards with minimal boilerplate, perfect for quickly turning a machine learning pipeline into something visual and usable. For the ML side, **Scikit Learn** handles the full pipeline from preprocessing (StandardScaler + OneHotEncoder) through to model training and evaluation. We used **SMOTE** from Imbalanced Learn to handle the class imbalance in our dataset, and **XGBoost** was trained alongside Logistic Regression to compare performance. **Matplotlib** and **Seaborn** power all the charts, and **Joblib** takes care of saving and loading the trained pipeline artifacts.
+
+For a deep dive into every library and why we chose it, check out our **[Technology Stack & Libraries Guide](TECH_STACK.md)**.
+
+---
+
+### Milestones & Deliverables
+
+#### Milestone 1: ML Based Churn Prediction (Mid Sem)
+
+The goal here was to identify customers at risk of leaving using historical behavioral data, focusing entirely on classical ML techniques without any LLMs.
+
+**What we delivered:**
+
+1. A thorough understanding of the business problem and the context behind customer churn in telecom.
+2. A complete data exploration and preprocessing pipeline inside `churn.ipynb`, including handling missing values, encoding categorical features, and balancing the dataset with SMOTE.
+3. Trained and evaluated both Logistic Regression and XGBoost classifiers with full performance reports (Accuracy, Precision, Recall, F1 Score, Confusion Matrix).
+4. A working Streamlit dashboard (`app.py`) featuring a Data Overview tab with interactive visualizations (churn distribution, contract analysis, tenure histograms, monthly charges comparison) and a Predict Churn tab where users can input customer details and get real time predictions with probability scores, key risk factors, personalized retention recommendations, and a customer vs average comparison chart.
+5. An export feature that lets users download prediction results as a CSV file.
+
+#### Milestone 2: Agentic AI Retention Assistant (End Sem)
+
+The objective is to extend the system into an intelligent agent that reasons about churn risk and retrieves best practices to generate structured, actionable retention strategies.
+
+**What's expected:**
+
+1. A publicly deployed application with a live, shareable link.
+2. Agent workflow documentation covering states and nodes.
+3. Structured retention report generation powered by LLMs and RAG.
+4. A complete GitHub repository with clean, documented code.
+5. A demo video (max 5 minutes) walking through the full system.
+
+---
+
+### Evaluation Criteria
+
+| Phase | Weight | What's Being Evaluated |
+| :--- | :--- | :--- |
+| **Mid Sem** | 25% | How well ML techniques are applied, quality of feature engineering, dashboard usability, and evaluation metrics. |
+| **End Sem** | 30% | Quality of agent reasoning, RAG and state management implementation, clarity of output, and successful deployment. |
+
+> **Important:** Localhost only demonstrations will not be accepted for the final submission. The project must be hosted and publicly accessible.
 
 ---
 
 ### Setup and Installation
 
-Ready to run this project yourself? Check out our detailed **[Setup and Installation Guide](SETUP_GUIDE.md)** for step-by-step instructions on how to clone the repository, install dependencies, and launch the Streamlit dashboard.
-
----
-
-### Technology Stack
-
-Curious about how things work under the hood? We've published a comprehensive **[Technology Stack & Libraries Guide](TECH_STACK.md)** breaking down exactly which libraries we used (like Streamlit, Scikit-Learn, and SMOTE), why we chose them, and what role they play in the data pipeline.
-
----
-
-### Team & Contributors
-
-This project is maintained by a dedicated team. Check out the **[Contributors page](CONTRIBUTORS.md)** to see the core project heads and learn how you can contribute!
+Ready to run this project yourself? Check out our detailed **[Setup and Installation Guide](SETUP_GUIDE.md)** for step by step instructions on how to clone the repository, install dependencies, and launch the Streamlit dashboard.
