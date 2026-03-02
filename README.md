@@ -41,7 +41,7 @@ Here's a quick summary of the tools and technologies powering each part of the p
 
 We chose **Streamlit** for the frontend because it lets us build interactive dashboards with minimal boilerplate, perfect for quickly turning a machine learning pipeline into something visual and usable. For the ML side, **Scikit Learn** handles the full pipeline from preprocessing (Label Encoding + SMOTE) through to model training and evaluation. We evaluated Decision Tree, **Random Forest**, and XGBoost using 5-fold cross-validation, then selected **Random Forest** as the final model for its superior accuracy and robustness. **Matplotlib** and **Seaborn** power all the charts, and **Joblib** takes care of saving and loading the trained pipeline artifacts.
 
-For a deep dive into every library and why we chose it, check out our **[Technology Stack & Libraries Guide](TECH_STACK.md)**.
+For a deep dive into every library and why we chose it, check out our **[Technology Stack & Libraries Guide](docs/TECH_STACK.md)**.
 
 ---
 
@@ -61,4 +61,4 @@ The goal here was to identify customers at risk of leaving using historical beha
 
 ### Setup and Installation
 
-Ready to run this project yourself? Check out our detailed **[Setup and Installation Guide](SETUP_GUIDE.md)** for step by step instructions on how to clone the repository, install dependencies, and launch the Streamlit dashboard.
+Ready to run this project yourself? Check out our detailed **[Setup and Installation Guide](docs/SETUP_GUIDE.md)** for step by step instructions on how to clone the repository, install dependencies, and launch the Streamlit dashboard.
