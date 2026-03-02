@@ -1,4 +1,5 @@
 # Customer Churn Prediction & Agentic Retention Strategy
+
 ## From Predictive Analytics to Intelligent Intervention
 
 ### Project Overview
@@ -38,3 +39,9 @@ Here's a quick look at the tools and technologies powering each part of the proj
 | **Model Persistence** | Joblib |
 
 We chose **Streamlit** for the frontend because it lets us build interactive dashboards with minimal boilerplate, perfect for quickly turning a machine learning pipeline into something visual and usable. For the ML side, **Scikit Learn** handles everything from preprocessing to model training and evaluation. **Matplotlib** and **Seaborn** power the charts and visualizations across the dashboard, while **Joblib** takes care of saving and loading the trained model artifacts.
+
+---
+
+### Setup and Installation
+
+Ready to run this project yourself? Check out our detailed **[Setup and Installation Guide](SETUP_GUIDE.md)** for step-by-step instructions on how to clone the repository, install dependencies, and launch the Streamlit dashboard.
