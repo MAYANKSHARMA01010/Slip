@@ -45,3 +45,9 @@ We chose **Streamlit** for the frontend because it lets us build interactive das
 ### Setup and Installation
 
 Ready to run this project yourself? Check out our detailed **[Setup and Installation Guide](SETUP_GUIDE.md)** for step-by-step instructions on how to clone the repository, install dependencies, and launch the Streamlit dashboard.
+
+---
+
+### Team & Contributors
+
+This project is maintained by a dedicated team. Check out the **[Contributors page](CONTRIBUTORS.md)** to see the core project heads and learn how you can contribute!
