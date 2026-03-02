@@ -37,8 +37,7 @@ Here is a breakdown of the core libraries we rely on, why we chose them, and wha
 **[Scikit-Learn](https://scikit-learn.org/)**
 
 - **What it is:** A robust machine learning library for Python.
-- **Why we use it:** It features top-tier documentation and a highly consistent API. It provides a wide array of classification, regression, and clustering algorithms alongside world-class preprocessing capabilities.
-- **How it's used:** We use it extensively to build our core `Pipeline`. It handles data scaling (`StandardScaler`), categorical encoding (`OneHotEncoder`), and ultimately trains our primary classifier (`LogisticRegression`). We also heavily rely on its `metrics` module for model evaluation (accuracy, precision, recall, f1, confusion matrix).
+- **How it's used:** We use it extensively to build our core `Pipeline`. It handles data scaling (`StandardScaler`), categorical encoding (`OneHotEncoder`), and ultimately trains our primary classifiers. We also heavily rely on its `metrics` module for model evaluation (accuracy, precision, recall, f1, confusion matrix).
 
 **[Imbalanced-Learn (imblearn)](https://imbalanced-learn.org/)**
 
@@ -46,11 +45,11 @@ Here is a breakdown of the core libraries we rely on, why we chose them, and wha
 - **Why we use it:** Our dataset is skewed (there are far more non-churners than churners). Without correction, a model might "cheat" and simply predict "No Churn" every time to achieve high accuracy.
 - **How it's used:** We use its `SMOTE` (Synthetic Minority Over-sampling Technique) implementation to synthetically generate new examples of the minority class (churners) during training, forcing the model to learn the true underlying patterns rather than the class imbalance.
 
-**[XGBoost](https://xgboost.readthedocs.io/)**
+**[Random Forest & Decision Tree]**
 
-- **What it is:** An optimized distributed gradient boosting library.
-- **Why we use it:** It is widely recognized as one of the fastest and most highly performant algorithms for tabular data.
-- **How it's used:** We trained an `XGBClassifier` alongside our Logistic Regression model as an alternative, highly complex tree-based approach during the evaluation phase.
+- **What they are:** Tree-based ensemble and rule-based classification algorithms.
+- **Why we use them:** They are highly interpretable, handle non-linear data well, and Random Forest provides excellent robustness against overfitting.
+- **How they are used:** We trained a `DecisionTreeClassifier` and a `RandomForestClassifier` (which ultimately became our final chosen model) during the evaluation phase to compare performance.
 
 **[Joblib](https://joblib.readthedocs.io/)**
 
@@ -76,8 +75,7 @@ To tie all these technologies together, the project is structured around three m
 
 **`churn.ipynb`**
 
-- **Purpose:** The Research and Modeling Environment.
-- **Details:** This Jupyter Notebook is where all the initial Exploratory Data Analysis (EDA) happens. It contains the code for cleaning the data, analyzing correlations, handling the dataset imbalance via SMOTE, and training/evaluating the actual Logistic Regression and XGBoost classifiers. It is the "sandbox" where the data science work is verified before being exported for production.
+- **Details:** This Jupyter Notebook is where all the initial Exploratory Data Analysis (EDA) happens. It contains the code for cleaning the data, analyzing correlations, handling the dataset imbalance via SMOTE, and training/evaluating the actual Decision Tree, Random Forest, and XGBoost classifiers. It is the "sandbox" where the data science work is verified before being exported for production.
 
 **`app.py`**
 
@@ -104,7 +102,7 @@ Here is a quick overview of the entire repository structure, so you know exactly
 ├── TECH_STACK.md            # You are here! Details on weapons of choice
 ├── app.py                   # The Streamlit web dashboard source code
 ├── churn.ipynb              # The Jupyter notebook for EDA and model training
-├── customer_churn_model.pkl # Best trained model (XGBoost/LogReg) saved to disk
+├── customer_churn_model.pkl # Best trained model saved to disk
 ├── encoders.pkl             # Serialized OneHotEncoders for robust categorical preprocessing
 ├── feature_columns.pkl      # Expected dataframe columns for consistent model inference
 ├── model_pipeline.pkl       # Full scikit-learn preprocessing and modeling pipeline
