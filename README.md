@@ -59,31 +59,6 @@ The goal here was to identify customers at risk of leaving using historical beha
 4. A working Streamlit dashboard (`app.py`) featuring a Data Overview tab with interactive visualizations (churn distribution, contract analysis, tenure histograms, monthly charges comparison) and a Predict Churn tab where users can input customer details and get real time predictions with probability scores, key risk factors, personalized retention recommendations, and a customer vs average comparison chart.
 5. An export feature that lets users download prediction results as a CSV file.
 
-#### Milestone 2: Agentic AI Retention Assistant (End Sem)
-
-The objective is to extend the system into an intelligent agent that reasons about churn risk and retrieves best practices to generate structured, actionable retention strategies.
-
-**What's expected:**
-
-1. A publicly deployed application with a live, shareable link.
-2. Agent workflow documentation covering states and nodes.
-3. Structured retention report generation powered by LLMs and RAG.
-4. A complete GitHub repository with clean, documented code.
-5. A demo video (max 5 minutes) walking through the full system.
-
----
-
-### Evaluation Criteria
-
-| Phase | Weight | What's Being Evaluated |
-| :--- | :--- | :--- |
-| **Mid Sem** | 25% | How well ML techniques are applied, quality of feature engineering, dashboard usability, and evaluation metrics. |
-| **End Sem** | 30% | Quality of agent reasoning, RAG and state management implementation, clarity of output, and successful deployment. |
-
-> **Important:** Localhost only demonstrations will not be accepted for the final submission. The project must be hosted and publicly accessible.
-
----
-
 ### Setup and Installation
 
 Ready to run this project yourself? Check out our detailed **[Setup and Installation Guide](SETUP_GUIDE.md)** for step by step instructions on how to clone the repository, install dependencies, and launch the Streamlit dashboard.
