@@ -110,9 +110,18 @@ def generate_report(state: AgentState):
     """
     Synthesizes analysis and knowledge into a professional report.
     """
+    customer_name = state["customer_data"].get("CustomerName", "Customer")
+    customer_email = state["customer_data"].get("CustomerEmail", "")
+    company_name = state["customer_data"].get("CompanyName", "Telco")
+
     prompt = f"""
     You are a Senior Strategic Retention Agent. 
     Based on the following analysis and expert strategies, generate a professional retention plan.
+
+    CUSTOMER IDENTITY CONTEXT:
+    - Customer Name: {customer_name}
+    - Customer Email: {customer_email}
+    - Company Name: {company_name}
     
     CUSTOMER ANALYSIS:
     {state['analysis']}
@@ -124,6 +133,11 @@ def generate_report(state: AgentState):
     1. Executive Risk Summary (Professional tone).
     2. Actionable Intervention Plan (Bullet points).
     3. Draft Retention Email (Personalized, empathetic, and including a specific offer).
+
+    IMPORTANT EMAIL REQUIREMENTS:
+    - Use the exact customer name and company name provided above.
+    - Include the customer email in a short line like "To: ..." before the subject.
+    - Do not use placeholders such as [Customer Name], [Company Name], [Your Name], or [Link: ...].
     """
     
     log = state.get('thought_log', [])
@@ -134,7 +148,7 @@ def generate_report(state: AgentState):
     if not final_report:
         # --- Heuristic Fallback Content ---
         heuristic_report = f"""
-### 🧠 AI Strategy Report (Heuristic Mode)
+### AI Strategy Report (Heuristic Mode)
 
 **1. Executive Risk Summary**
 The customer is at risk due to their **{state['customer_data']['Contract']}** contract and **{state['customer_data']['InternetService']}** service. With a churn probability of **{state['churn_probability']:.1f}%**, immediate intervention is recommended to secure long-term value.
@@ -145,16 +159,30 @@ The customer is at risk due to their **{state['customer_data']['Contract']}** co
 *   **Loyalty Engagement**: Schedule a proactive touchpoint to address any latent dissatisfaction before it leads to churn.
 
 **3. Draft Retention Email**
+To: {customer_email}
 Subject: We value your partnership - let's find your perfect plan
 
-Dear Customer,
+Dear {customer_name},
 
-We noticed you've been with us for {state['customer_data']['tenure']} months, and we want to ensure you're getting the best experience possible. We've reviewed your current service profile and would like to offer you an exclusive loyalty discount on our annual secured plans.
+As a valued member of {company_name}, we noticed you've been with us for {state['customer_data']['tenure']} months, and we want to ensure you're getting the best experience possible. We've reviewed your current service profile and would like to offer you an exclusive loyalty discount on our annual secured plans.
 
 This upgrade would provide you with both price stability and enhanced support features. Are you available for a brief call this week to discuss how we can better serve you?
+
+Best regards,
+Retention Team
+{company_name}
 """
         final_report = f"> 💡 **Safe Mode Active**: All AI providers reached quota limits. Using expert heuristics.\n\n" + heuristic_report
         log.append("💡 Switched to Heuristic Mode for final report.")
+
+    if final_report:
+        final_report = (
+            final_report
+            .replace("[Customer Name]", customer_name)
+            .replace("[Company Name]", company_name)
+            .replace("[Your Name]", "Retention Team")
+            .replace("[Link: Secure My Savings]", "Please reply to this email to activate your offer.")
+        )
     
     return {"final_report": final_report, "active_provider": provider, "thought_log": log}
         
