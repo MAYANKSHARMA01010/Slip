@@ -17,6 +17,8 @@ if "agent_result" not in st.session_state:
     st.session_state.agent_result = None
 if "active_provider" not in st.session_state:
     st.session_state.active_provider = None
+if "show_dashboard" not in st.session_state:
+    st.session_state.show_dashboard = False
 
 warnings.filterwarnings("ignore")
 st.set_page_config(
@@ -88,6 +90,39 @@ st.markdown("""
     /* Custom divider line */
     hr {
         border-color: rgba(255, 255, 255, 0.1) !important;
+    }
+
+    /* Landing page */
+    .home-hero {
+        padding: 2.2rem 1.8rem;
+        border-radius: 16px;
+        border: 1px solid rgba(0, 210, 255, 0.25);
+        background: radial-gradient(circle at top right, rgba(58, 123, 213, 0.18), rgba(2, 6, 23, 0.7));
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
+        margin-bottom: 1.2rem;
+    }
+
+    .home-card {
+        background: rgba(15, 23, 42, 0.72);
+        border: 1px solid rgba(148, 163, 184, 0.2);
+        border-radius: 14px;
+        padding: 1rem 1.1rem;
+        min-height: 185px;
+    }
+
+    .home-subtle {
+        color: #cbd5e1;
+    }
+
+    .home-chip {
+        display: inline-block;
+        border: 1px solid rgba(0, 210, 255, 0.35);
+        color: #e2e8f0;
+        background: rgba(0, 210, 255, 0.1);
+        border-radius: 999px;
+        padding: 0.25rem 0.65rem;
+        margin: 0.2rem 0.25rem 0.2rem 0;
+        font-size: 0.8rem;
     }
 </style>
 """, unsafe_allow_html=True)
