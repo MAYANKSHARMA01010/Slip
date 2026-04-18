@@ -1,4 +1,5 @@
 import os
+import re
 import warnings
 import matplotlib.pyplot as plt
 import numpy as np
@@ -270,6 +271,11 @@ def load_data():
     df = pd.read_csv("telco_customer_churn.csv").drop(columns=["customerID"])
     df["TotalCharges"] = df["TotalCharges"].replace({" ": "0.0"}).astype(float)
     return df
+
+
+def is_valid_email(email: str) -> bool:
+    email_pattern = r"^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$"
+    return bool(re.match(email_pattern, email.strip()))
 
 
 pipeline, feature_columns = load_artifacts()
@@ -564,6 +570,15 @@ with tab2:
     st.caption("Complete the profile fields and run inference to estimate churn probability.")
 
     with st.form("prediction_form"):
+        st.markdown("##### Contact Details")
+        i1, i2, i3 = st.columns(3)
+        with i1:
+            customer_name = st.text_input("Customer Name", value="")
+        with i2:
+            customer_email = st.text_input("Customer Email", value="", placeholder="name@example.com")
+        with i3:
+            company_name = st.text_input("Company Name", value="Telco")
+
         col1, col2, col3 = st.columns(3)
 
         with col1:
@@ -638,7 +653,10 @@ with tab2:
 
         submitted = st.form_submit_button("Predict Churn", use_container_width=True)
 
-    if submitted:
+    if submitted and not is_valid_email(customer_email):
+        st.error("Please enter a valid customer email address before running prediction.")
+
+    if submitted and is_valid_email(customer_email):
         with st.status("Analyzing customer profile...", expanded=True) as status:
             st.write("Extracting demographic and service data...")
             time.sleep(0.5)
@@ -647,6 +665,9 @@ with tab2:
             st.write("Executing predictive model...")
             
             input_data = {
+                "CustomerName": customer_name.strip() or "Customer",
+                "CustomerEmail": customer_email.strip(),
+                "CompanyName": company_name.strip() or "Telco",
                 "gender": gender,
                 "SeniorCitizen": 1 if senior_citizen == "Yes" else 0,
                 "Partner": partner,
