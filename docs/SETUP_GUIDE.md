@@ -2,6 +2,28 @@
 
 This guide will walk you through cloning the repository, setting up your environment, and running the Streamlit dashboard locally.
 
+## 🚀 Quick Start (macOS/Linux)
+
+Copy and paste these commands in order to get the project running in seconds:
+
+```bash
+# 1. Create a virtual environment
+python3 -m venv .venv
+
+# 2. Activate the environment
+source .venv/bin/activate
+
+# 3. Install all dependencies
+pip install -r requirements.txt
+
+# 4. Launch the dashboard
+streamlit run app.py
+```
+
+---
+
+## Detailed Installation Steps
+
 ## Prerequisites
 
 - **Python 3.9+** installed on your system.
