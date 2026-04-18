@@ -255,7 +255,7 @@ import joblib
 ARTIFACTS = ["model_pipeline.pkl", "feature_columns.pkl"]
 
 if not all(os.path.exists(f) for f in ARTIFACTS):
-    st.error("Model artifacts not found. Please run the notebook first to generate `model_pipeline.pkl` and `feature_columns.pkl`.", icon="⚠️")
+    st.error("Model artifacts not found. Please run the notebook first to generate `model_pipeline.pkl` and `feature_columns.pkl`.")
     st.info("The dashboard requires a trained model to function. Please execute `churn.ipynb` to train the Random Forest model.")
     st.stop()
 
@@ -739,16 +739,16 @@ with tab2:
             st.markdown("##### Key Risk Factors")
             factors = []
             if contract == "Month-to-month":
-                factors.append("⚠️ **Month-to-month contract** users have the highest churn rate.")
+                factors.append("**Month-to-month contract** users have the highest churn rate.")
             if internet_service == "Fiber optic":
-                factors.append("⚠️ **Fiber optic** service has higher than average churn.")
+                factors.append("**Fiber optic** service has higher than average churn.")
             if tech_support == "No":
-                factors.append("⚠️ **Lack of Tech Support** is a strong predictor of churn.")
+                factors.append("**Lack of Tech Support** is a strong predictor of churn.")
             if tenure < 12:
-                factors.append("⚠️ **Low Tenure** (< 1 year) represents a critical risk period.")
+                factors.append("**Low Tenure** (< 1 year) represents a critical risk period.")
                 
             if not factors:
-                st.success("✅ Customer profile does not exhibit common churn risk factors.")
+                st.success("Customer profile does not exhibit common churn risk factors.")
             else:
                 for f in factors:
                     st.markdown(f)
@@ -820,7 +820,7 @@ with tab3:
     st.subheader("AI-Driven Retention Strategy")
     
     if st.session_state.customer_data is None:
-        st.info("Please run a prediction in the **Predict Churn** tab first to enable the AI Strategist.", icon="ℹ️")
+        st.info("Please run a prediction in the **Predict Churn** tab first to enable the AI Strategist.")
     else:
         st.markdown("""
         This AI Agent uses **LangGraph** to process customer data, query a **RAG-based** knowledge base 
