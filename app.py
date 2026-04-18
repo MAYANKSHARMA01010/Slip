@@ -154,6 +154,85 @@ def load_data():
 pipeline, feature_columns = load_artifacts()
 df = load_data()
 
+
+def render_home_page():
+    st.markdown(
+        """
+        <div class="home-hero">
+            <h1 style="margin-bottom:0.3rem;">🚀 Telco Churn Intelligence Suite</h1>
+            <p class="home-subtle" style="font-size:1.05rem; margin-bottom:1rem;">
+                A decision-support app that predicts customer churn risk and generates
+                AI-assisted retention strategies for high-value telecom customers.
+            </p>
+            <span class="home-chip">ML Prediction</span>
+            <span class="home-chip">RAG + Agentic Reasoning</span>
+            <span class="home-chip">Interactive Dashboard</span>
+            <span class="home-chip">Exportable Reports</span>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+
+    c1, c2, c3 = st.columns(3)
+    with c1:
+        st.markdown(
+            """
+            <div class="home-card">
+                <h4>What this project does</h4>
+                <p class="home-subtle">
+                    It estimates churn probability using a trained ML pipeline, then
+                    turns the prediction into practical business recommendations.
+                </p>
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
+    with c2:
+        st.markdown(
+            """
+            <div class="home-card">
+                <h4>How it works</h4>
+                <p class="home-subtle">
+                    Input customer profile → preprocess with model artifacts → score churn risk
+                    → invoke AI strategist powered by LangGraph + RAG for intervention plans.
+                </p>
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
+    with c3:
+        st.markdown(
+            """
+            <div class="home-card">
+                <h4>Supported data now</h4>
+                <p class="home-subtle">
+                    Structured customer fields (CSV/form), model artifacts (<code>.pkl</code>),
+                    markdown strategy knowledge base, and FAISS vector indexes for retrieval.
+                </p>
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
+
+    st.markdown("### Product Flow")
+    st.markdown("1. Explore churn trends in the analytics dashboard.")
+    st.markdown("2. Predict churn probability for any customer profile.")
+    st.markdown("3. Generate an expert retention plan and download results.")
+
+    if st.button("Enter Dashboard", use_container_width=True):
+        st.session_state.show_dashboard = True
+        st.rerun()
+
+
+if not st.session_state.show_dashboard:
+    render_home_page()
+    st.stop()
+
+with st.sidebar:
+    if st.button("🏠 Back to Home", use_container_width=True):
+        st.session_state.show_dashboard = False
+        st.rerun()
+
 st.title("Telco Churn")
 tab1, tab2, tab3 = st.tabs(["Data Overview", "Predict Churn", "🧠 Senior AI Strategist"])
 
