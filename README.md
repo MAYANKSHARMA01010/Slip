@@ -67,9 +67,27 @@ The goal here was to identify customers at risk of leaving using historical beha
 4. A working Streamlit dashboard (`app.py`) featuring a Data Overview tab with interactive visualizations (churn distribution, contract analysis, tenure histograms, monthly charges comparison) and a Predict Churn tab where users can input customer details and get real time predictions with probability scores, key risk factors, personalized retention recommendations, and a customer vs average comparison chart.
 5. An export feature that lets users download prediction results as a CSV file.
 
+### Quick Start
+
+If you're on macOS/Linux, run these commands to get started immediately:
+
+```bash
+# 1. Create virtual environment
+python3 -m venv .venv
+
+# 2. Activate it
+source .venv/bin/activate
+
+# 3. Install dependencies
+pip install -r requirements.txt
+
+# 4. Run the dashboard
+streamlit run app.py
+```
+
 ### Setup and Installation
 
-Ready to run this project yourself? Check out our detailed **[Setup and Installation Guide](docs/SETUP_GUIDE.md)** for step by step instructions on how to clone the repository, install dependencies, and launch the Streamlit dashboard.
+Ready to run this project yourself? Check out our detailed **[Setup and Installation Guide](docs/SETUP_GUIDE.md)** for more in-depth instructions.
 
 ---
 
