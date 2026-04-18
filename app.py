@@ -1,4 +1,5 @@
 import os
+import re
 import warnings
 import matplotlib.pyplot as plt
 import numpy as np
@@ -17,6 +18,8 @@ if "agent_result" not in st.session_state:
     st.session_state.agent_result = None
 if "active_provider" not in st.session_state:
     st.session_state.active_provider = None
+if "show_dashboard" not in st.session_state:
+    st.session_state.show_dashboard = False
 
 warnings.filterwarnings("ignore")
 st.set_page_config(
@@ -63,31 +66,185 @@ st.markdown("""
 
     /* Buttons */
     div.stButton > button {
-        background: linear-gradient(135deg, #00d2ff 0%, #3a7bd5 100%);
+        background: #1d4ed8;
         color: white;
-        border: none;
+        border: 1px solid #1e40af;
         border-radius: 8px;
         padding: 0.5rem 1rem;
         font-weight: 600;
         transition: all 0.3s ease;
-        box-shadow: 0 4px 15px rgba(0, 210, 255, 0.4);
+        box-shadow: 0 4px 12px rgba(29, 78, 216, 0.35);
     }
     div.stButton > button:hover {
         transform: translateY(-2px);
-        box-shadow: 0 6px 20px rgba(0, 210, 255, 0.6);
+        box-shadow: 0 6px 16px rgba(29, 78, 216, 0.45);
+        background: #1e40af;
         color: white;
-        border-color: transparent;
+        border-color: #1e3a8a;
     }
 
     /* Tabs formatting */
     button[role="tab"] {
-        font-weight: 500;
-        padding-bottom: 0.5rem;
+        font-weight: 600;
+        font-size: 0.95rem;
+        padding: 0.45rem 0.8rem;
+        border-radius: 8px 8px 0 0;
+        color: #cbd5e1;
+        transition: all 0.2s ease;
+    }
+    button[role="tab"]:hover {
+        color: #e2e8f0;
+        background: #111827;
+    }
+    button[role="tab"][aria-selected="true"] {
+        color: #e2e8f0;
+        background: #0f172a;
     }
     
     /* Custom divider line */
     hr {
         border-color: rgba(255, 255, 255, 0.1) !important;
+    }
+
+    /* Landing page - premium hero */
+    .home-shell {
+        border: 1px solid #1f2937;
+        border-radius: 22px;
+        padding: 1.1rem 1.2rem 1.8rem 1.2rem;
+        background: #0b1220;
+        box-shadow: 0 16px 40px rgba(0, 0, 0, 0.28);
+    }
+
+    .home-nav {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 1rem;
+        padding: 0.2rem 0.2rem 1.2rem 0.2rem;
+        border-bottom: 1px solid #1f2937;
+        margin-bottom: 1.7rem;
+    }
+
+    .home-brand {
+        color: #f8fafc;
+        font-size: 1.25rem;
+        font-weight: 700;
+        letter-spacing: 0.2px;
+    }
+
+    .home-nav-links {
+        color: #94a3b8;
+        font-size: 0.92rem;
+        font-weight: 500;
+        display: flex;
+        gap: 1.2rem;
+        flex-wrap: wrap;
+        justify-content: flex-end;
+    }
+
+    .home-hero {
+        padding: 1.2rem 1rem 0.6rem 1rem;
+        text-align: center;
+    }
+
+    .home-title {
+        color: #f8fafc;
+        font-size: clamp(2rem, 4.6vw, 4.1rem);
+        line-height: 1.08;
+        letter-spacing: -0.02em;
+        margin-bottom: 0.9rem;
+        font-weight: 700;
+    }
+
+    .home-subtitle {
+        color: #aab8cc;
+        max-width: 860px;
+        margin: 0 auto 1.4rem auto;
+        font-size: clamp(1rem, 1.4vw, 1.25rem);
+    }
+
+    .home-pill-row {
+        display: flex;
+        justify-content: center;
+        gap: 0.6rem;
+        flex-wrap: wrap;
+        margin-top: 0.7rem;
+    }
+
+    .home-chip {
+        display: inline-block;
+        border: 1px solid #334155;
+        color: #dbeafe;
+        background: #111827;
+        border-radius: 999px;
+        padding: 0.34rem 0.8rem;
+        font-size: 0.78rem;
+    }
+
+    .home-card {
+        margin-top: 1.2rem;
+        background: #0f172a;
+        border: 1px solid #1f2937;
+        border-radius: 14px;
+        padding: 1rem 1.1rem;
+        min-height: 170px;
+    }
+
+    .home-subtle {
+        color: #cbd5e1;
+    }
+
+    .home-metric-label {
+        color: #94a3b8;
+        font-size: 0.82rem;
+        margin-top: 0.3rem;
+    }
+
+    .home-flow {
+        margin-top: 1rem;
+        border: 1px solid #1f2937;
+        background: #0f172a;
+        border-radius: 14px;
+        padding: 1rem 1.1rem;
+    }
+
+    /* Dashboard professional header */
+    .app-header {
+        border: 1px solid #1f2937;
+        background: #0f172a;
+        border-radius: 14px;
+        padding: 1rem 1.1rem;
+        margin-bottom: 0.8rem;
+    }
+
+    .app-title {
+        margin: 0;
+        color: #f8fafc;
+        font-size: 2rem;
+        font-weight: 700;
+        letter-spacing: -0.02em;
+    }
+
+    .app-subtitle {
+        margin: 0.3rem 0 0 0;
+        color: #94a3b8;
+        font-size: 0.98rem;
+    }
+
+    .badge-row {
+        margin-top: 0.7rem;
+    }
+
+    .badge {
+        display: inline-block;
+        margin-right: 0.45rem;
+        margin-bottom: 0.35rem;
+        background: #111827;
+        color: #cbd5e1;
+        border: 1px solid #334155;
+        border-radius: 999px;
+        padding: 0.2rem 0.6rem;
+        font-size: 0.78rem;
     }
 </style>
 """, unsafe_allow_html=True)
@@ -99,7 +256,7 @@ import joblib
 ARTIFACTS = ["model_pipeline.pkl", "feature_columns.pkl"]
 
 if not all(os.path.exists(f) for f in ARTIFACTS):
-    st.error("Model artifacts not found. Please run the notebook first to generate `model_pipeline.pkl` and `feature_columns.pkl`.", icon="⚠️")
+    st.error("Model artifacts not found. Please run the notebook first to generate `model_pipeline.pkl` and `feature_columns.pkl`.")
     st.info("The dashboard requires a trained model to function. Please execute `churn.ipynb` to train the Random Forest model.")
     st.stop()
 
@@ -116,11 +273,156 @@ def load_data():
     return df
 
 
+def is_valid_email(email: str) -> bool:
+    email_pattern = r"^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$"
+    return bool(re.match(email_pattern, email.strip()))
+
+
 pipeline, feature_columns = load_artifacts()
 df = load_data()
 
-st.title("Telco Churn")
-tab1, tab2, tab3 = st.tabs(["Data Overview", "Predict Churn", "🧠 Senior AI Strategist"])
+
+def render_home_page():
+    st.markdown(
+        """
+        <div class="home-shell">
+            <div class="home-nav">
+                <div class="home-brand">TelcoAI</div>
+                <div class="home-nav-links">
+                    <span>Products</span>
+                    <span>Docs</span>
+                    <span>Ecosystem</span>
+                    <span>Resources</span>
+                    <span>Pricing</span>
+                </div>
+            </div>
+            <div class="home-hero">
+                <div class="home-title">
+                    Predict telecom churn early,<br/>retain customers with AI strategies
+                </div>
+                <p class="home-subtitle">
+                    This platform combines a production-ready machine learning pipeline with agentic reasoning
+                    to transform churn probability into practical, customer-specific retention actions.
+                </p>
+                <div class="home-pill-row">
+                    <span class="home-chip">ML Prediction Engine</span>
+                    <span class="home-chip">RAG Knowledge Base</span>
+                    <span class="home-chip">Executive Dashboard</span>
+                    <span class="home-chip">Downloadable Reports</span>
+                </div>
+            </div>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+
+    c1, c2, c3 = st.columns(3)
+    with c1:
+        st.markdown(
+            """
+            <div class="home-card">
+                <h4>What this project does</h4>
+                <p class="home-subtle">
+                    The app estimates churn probability from customer profile data and
+                    converts model outputs into business-focused retention guidance.
+                </p>
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
+    with c2:
+        st.markdown(
+            """
+            <div class="home-card">
+                <h4>How it works</h4>
+                <p class="home-subtle">
+                    Input customer attributes, process via trained artifacts, generate risk scores,
+                    and activate an AI strategist powered by LangGraph and RAG for intervention planning.
+                </p>
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
+    with c3:
+        st.markdown(
+            """
+            <div class="home-card">
+                <h4>Supported data now</h4>
+                <p class="home-subtle">
+                    Structured customer records (CSV/form fields), model artifacts, markdown strategy
+                    documents, and FAISS vector indexes used for retrieval-augmented planning.
+                </p>
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
+
+    vector_index_ready = any(
+        os.path.exists(path)
+        for path in [
+            "vectorstore/db_faiss/index.faiss",
+            "vectorstore/db_faiss/index 2.faiss",
+        ]
+    )
+    kb_ready = os.path.exists("knowledge_base/retention_strategies.md")
+
+    k1, k2, k3, k4 = st.columns(4)
+    with k1:
+        st.markdown('<div class="home-metric-label">Dataset Rows</div>', unsafe_allow_html=True)
+        st.markdown(f"### {len(df):,}")
+    with k2:
+        st.markdown('<div class="home-metric-label">Model Features</div>', unsafe_allow_html=True)
+        st.markdown(f"### {len(feature_columns)}")
+    with k3:
+        st.markdown('<div class="home-metric-label">Knowledge Base</div>', unsafe_allow_html=True)
+        st.markdown(f"### {'Ready' if kb_ready else 'Missing'}")
+    with k4:
+        st.markdown('<div class="home-metric-label">Vector Index</div>', unsafe_allow_html=True)
+        st.markdown(f"### {'Ready' if vector_index_ready else 'Missing'}")
+
+    st.markdown(
+        """
+        <div class="home-flow">
+            <h3 style="margin-bottom:0.5rem;">Product Flow</h3>
+            <p class="home-subtle">1. Explore churn trends in the analytics dashboard.</p>
+            <p class="home-subtle">2. Predict churn probability for any customer profile.</p>
+            <p class="home-subtle">3. Generate an expert retention strategy and download the report.</p>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+
+    if st.button("Enter Dashboard", use_container_width=True):
+        st.session_state.show_dashboard = True
+        st.rerun()
+
+
+if not st.session_state.show_dashboard:
+    render_home_page()
+    st.stop()
+
+with st.sidebar:
+    if st.button("Back to Home", use_container_width=True):
+        st.session_state.show_dashboard = False
+        st.rerun()
+
+st.markdown(
+    """
+    <div class="app-header">
+        <h1 class="app-title">Telco Churn Command Center</h1>
+        <p class="app-subtitle">
+            Monitor churn signals, predict risk, and generate AI-powered retention actions from one workspace.
+        </p>
+        <div class="badge-row">
+            <span class="badge">Dataset Analytics</span>
+            <span class="badge">Predictive Scoring</span>
+            <span class="badge">Agentic Retention Planning</span>
+        </div>
+    </div>
+    """,
+    unsafe_allow_html=True,
+)
+tab1, tab2, tab3 = st.tabs(["Overview", "Churn Prediction", "AI Strategist"])
 
 
 with tab1:
@@ -142,13 +444,25 @@ with tab1:
 
         # Global dark mode chart settings
         plt.style.use('dark_background')
-        CHART_COLORS = ["#00d2ff", "#E8534A"]  # Vivid Blue and Coral Red
+        CHART_COLORS = ["#38bdf8", "#f97316"]
+        CHART_BG = "#0f172a"
+        CHART_TEXT = "#e2e8f0"
+        CHART_GRID = "#334155"
+        CHART_EDGE = "#ffffff26"
+
+        def style_axis(ax):
+            ax.set_facecolor(CHART_BG)
+            ax.tick_params(colors=CHART_TEXT, which='both', labelsize=9)
+            ax.grid(True, linestyle='--', alpha=0.25, axis='y', color=CHART_GRID)
+            ax.spines[["top", "right"]].set_visible(False)
+            for side in ["left", "bottom"]:
+                ax.spines[side].set_color(CHART_EDGE)
 
         with c1:
             st.subheader("Churn Distribution")
-            fig, ax = plt.subplots(figsize=(4, 3.5))
+            fig, ax = plt.subplots(figsize=(3.2, 2.7))
             fig.patch.set_alpha(0.0)
-            ax.patch.set_alpha(0.0)
+            ax.set_facecolor(CHART_BG)
             counts = df["Churn"].value_counts()
             ax.pie(
                 counts,
@@ -156,7 +470,9 @@ with tab1:
                 autopct="%1.1f%%",
                 colors=CHART_COLORS,
                 startangle=90,
-                wedgeprops={"edgecolor": "#ffffff33", "linewidth": 1.5},
+                pctdistance=0.72,
+                textprops={"color": CHART_TEXT, "fontsize": 10, "fontweight": "medium"},
+                wedgeprops={"edgecolor": "#ffffff33", "linewidth": 1.2, "width": 0.42},
             )
             plt.tight_layout()
             st.pyplot(fig)
@@ -164,18 +480,17 @@ with tab1:
 
         with c2:
             st.subheader("Contract Type vs Churn")
-            fig, ax = plt.subplots(figsize=(5, 3.5))
+            fig, ax = plt.subplots(figsize=(4.1, 2.9))
             fig.patch.set_alpha(0.0)
-            ax.patch.set_alpha(0.0)
+            style_axis(ax)
             contract_churn = df.groupby(["Contract", "Churn"]).size().unstack(fill_value=0)
             contract_churn.plot(
-                kind="bar", ax=ax, color=CHART_COLORS, edgecolor="#ffffff33"
+                kind="bar", ax=ax, color=CHART_COLORS, edgecolor=CHART_EDGE, width=0.68
             )
-            ax.set_xlabel("Contract Type", fontsize=9)
-            ax.set_ylabel("Number of Customers", fontsize=9)
-            ax.legend(["No Churn", "Churned"], fontsize=8, framealpha=0.2)
-            plt.xticks(rotation=20, ha="right", fontsize=8)
-            ax.grid(True, linestyle='--', alpha=0.2, axis='y')
+            ax.set_xlabel("Contract Type", fontsize=9, color=CHART_TEXT)
+            ax.set_ylabel("Number of Customers", fontsize=9, color=CHART_TEXT)
+            ax.legend(["No Churn", "Churned"], fontsize=8, framealpha=0.12, labelcolor=CHART_TEXT)
+            plt.xticks(rotation=18, ha="right", fontsize=8)
             plt.tight_layout()
             st.pyplot(fig)
             plt.close()
@@ -184,66 +499,63 @@ with tab1:
 
         with c3:
             st.subheader("Tenure Distribution by Churn")
-            fig, ax = plt.subplots(figsize=(5, 3.5))
+            fig, ax = plt.subplots(figsize=(4.1, 2.9))
             fig.patch.set_alpha(0.0)
-            ax.patch.set_alpha(0.0)
+            style_axis(ax)
             for label, color in [("No", CHART_COLORS[0]), ("Yes", CHART_COLORS[1])]:
                 ax.hist(
                     df[df["Churn"] == label]["tenure"],
-                    bins=30,
-                    alpha=0.7,
+                    bins=28,
+                    alpha=0.68,
                     color=color,
                     label=f"Churn: {label}",
-                    edgecolor="#00000080",
+                    edgecolor="#00000066",
                 )
-            ax.set_xlabel("Tenure (months)", fontsize=9)
-            ax.set_ylabel("Count", fontsize=9)
-            ax.legend(fontsize=8, framealpha=0.2)
-            ax.grid(True, linestyle='--', alpha=0.2, axis='y')
+            ax.set_xlabel("Tenure (months)", fontsize=9, color=CHART_TEXT)
+            ax.set_ylabel("Count", fontsize=9, color=CHART_TEXT)
+            ax.legend(fontsize=8, framealpha=0.12, labelcolor=CHART_TEXT)
             plt.tight_layout()
             st.pyplot(fig)
             plt.close()
 
         with c4:
             st.subheader("Monthly Charges by Churn")
-            fig, ax = plt.subplots(figsize=(5, 3.5))
+            fig, ax = plt.subplots(figsize=(4.1, 2.9))
             fig.patch.set_alpha(0.0)
-            ax.patch.set_alpha(0.0)
+            style_axis(ax)
             df.boxplot(
                 column="MonthlyCharges",
                 by="Churn",
                 ax=ax,
                 patch_artist=True,
-                boxprops=dict(facecolor=CHART_COLORS[0], color="#fff", alpha=0.7),
+                boxprops=dict(facecolor=CHART_COLORS[0], color="#e2e8f0", alpha=0.62),
                 medianprops=dict(color=CHART_COLORS[1], linewidth=2),
-                whiskerprops=dict(color="#fff"),
-                capprops=dict(color="#fff"),
-                flierprops=dict(markeredgecolor="#fff")
+                whiskerprops=dict(color="#e2e8f0"),
+                capprops=dict(color="#e2e8f0"),
+                flierprops=dict(markeredgecolor="#e2e8f0")
             )
             ax.set_title("")
-            ax.set_xlabel("Churn", fontsize=9)
-            ax.set_ylabel("Monthly Charges ($)", fontsize=9)
-            ax.grid(True, linestyle='--', alpha=0.2)
+            ax.set_xlabel("Churn", fontsize=9, color=CHART_TEXT)
+            ax.set_ylabel("Monthly Charges ($)", fontsize=9, color=CHART_TEXT)
             plt.suptitle("")
             plt.tight_layout()
             st.pyplot(fig)
             plt.close()
 
         st.subheader("Internet Service Type vs Churn")
-        fig, ax = plt.subplots(figsize=(8, 3.5))
+        fig, ax = plt.subplots(figsize=(6.3, 2.9))
         fig.patch.set_alpha(0.0)
-        ax.patch.set_alpha(0.0)
+        style_axis(ax)
         internet_churn = (
             df.groupby(["InternetService", "Churn"]).size().unstack(fill_value=0)
         )
         internet_churn.plot(
-            kind="bar", ax=ax, color=CHART_COLORS, edgecolor="#ffffff33"
+            kind="bar", ax=ax, color=CHART_COLORS, edgecolor=CHART_EDGE, width=0.65
         )
-        ax.set_xlabel("Internet Service", fontsize=9)
-        ax.set_ylabel("Number of Customers", fontsize=9)
-        ax.legend(["No Churn", "Churned"], fontsize=8, framealpha=0.2)
-        ax.grid(True, linestyle='--', alpha=0.2, axis='y')
-        plt.xticks(rotation=0, fontsize=9)
+        ax.set_xlabel("Internet Service", fontsize=9, color=CHART_TEXT)
+        ax.set_ylabel("Number of Customers", fontsize=9, color=CHART_TEXT)
+        ax.legend(["No Churn", "Churned"], fontsize=8, framealpha=0.12, labelcolor=CHART_TEXT)
+        plt.xticks(rotation=0, fontsize=9, color=CHART_TEXT)
         plt.tight_layout()
         st.pyplot(fig)
         plt.close()
@@ -255,9 +567,18 @@ with tab1:
 
 with tab2:
     st.subheader("Predict Customer Churn")
-    st.markdown("Fill in the customer details below and click **Predict**.")
+    st.caption("Complete the profile fields and run inference to estimate churn probability.")
 
     with st.form("prediction_form"):
+        st.markdown("##### Contact Details")
+        i1, i2, i3 = st.columns(3)
+        with i1:
+            customer_name = st.text_input("Customer Name", value="")
+        with i2:
+            customer_email = st.text_input("Customer Email", value="", placeholder="name@example.com")
+        with i3:
+            company_name = st.text_input("Company Name", value="Telco")
+
         col1, col2, col3 = st.columns(3)
 
         with col1:
@@ -332,7 +653,10 @@ with tab2:
 
         submitted = st.form_submit_button("Predict Churn", use_container_width=True)
 
-    if submitted:
+    if submitted and not is_valid_email(customer_email):
+        st.error("Please enter a valid customer email address before running prediction.")
+
+    if submitted and is_valid_email(customer_email):
         with st.status("Analyzing customer profile...", expanded=True) as status:
             st.write("Extracting demographic and service data...")
             time.sleep(0.5)
@@ -341,6 +665,9 @@ with tab2:
             st.write("Executing predictive model...")
             
             input_data = {
+                "CustomerName": customer_name.strip() or "Customer",
+                "CustomerEmail": customer_email.strip(),
+                "CompanyName": company_name.strip() or "Telco",
                 "gender": gender,
                 "SeniorCitizen": 1 if senior_citizen == "Yes" else 0,
                 "Partner": partner,
@@ -377,7 +704,7 @@ with tab2:
             time.sleep(0.5)
             status.update(label="Analysis complete!", state="complete", expanded=False)
             
-        st.toast('Prediction generated successfully!', icon='✅')
+        st.toast('Prediction generated successfully')
 
         st.divider()
         st.subheader("Prediction Result")
@@ -393,19 +720,20 @@ with tab2:
                 st.write(f"Probability: {stay_prob:.1f}%")
 
         with r2:
-            fig, ax = plt.subplots(figsize=(6, 2))
+            fig, ax = plt.subplots(figsize=(4.8, 1.8))
             fig.patch.set_alpha(0.0)
-            ax.patch.set_alpha(0.0)
+            ax.set_facecolor("#0f172a")
             bars = ax.barh(
                 ["Will Stay", "Will Churn"],
                 [stay_prob, churn_prob],
-                color=["#00d2ff", "#E8534A"],
+                color=["#38bdf8", "#f97316"],
                 edgecolor="#ffffff33",
                 height=0.5,
             )
             ax.set_xlim(0, 105)
             ax.set_xlabel("Probability (%)", fontsize=9, color="#e2e8f0")
-            ax.tick_params(colors="#e2e8f0", which='both')
+            ax.tick_params(colors="#e2e8f0", which='both', labelsize=9)
+            ax.grid(True, linestyle='--', alpha=0.25, axis='x', color="#334155")
             for bar, val in zip(bars, [stay_prob, churn_prob]):
                 ax.text(
                     val + 2,
@@ -432,16 +760,16 @@ with tab2:
             st.markdown("##### Key Risk Factors")
             factors = []
             if contract == "Month-to-month":
-                factors.append("⚠️ **Month-to-month contract** users have the highest churn rate.")
+                factors.append("**Month-to-month contract** users have the highest churn rate.")
             if internet_service == "Fiber optic":
-                factors.append("⚠️ **Fiber optic** service has higher than average churn.")
+                factors.append("**Fiber optic** service has higher than average churn.")
             if tech_support == "No":
-                factors.append("⚠️ **Lack of Tech Support** is a strong predictor of churn.")
+                factors.append("**Lack of Tech Support** is a strong predictor of churn.")
             if tenure < 12:
-                factors.append("⚠️ **Low Tenure** (< 1 year) represents a critical risk period.")
+                factors.append("**Low Tenure** (< 1 year) represents a critical risk period.")
                 
             if not factors:
-                st.success("✅ Customer profile does not exhibit common churn risk factors.")
+                st.success("Customer profile does not exhibit common churn risk factors.")
             else:
                 for f in factors:
                     st.markdown(f)
@@ -460,9 +788,9 @@ with tab2:
 
         st.markdown("<br>", unsafe_allow_html=True)
         st.markdown("##### Customer vs Average Metrics")
-        fig, ax = plt.subplots(figsize=(8, 3))
+        fig, ax = plt.subplots(figsize=(6.2, 2.6))
         fig.patch.set_alpha(0.0)
-        ax.patch.set_alpha(0.0)
+        ax.set_facecolor("#0f172a")
         
         metrics = ["Tenure (Months)", "Monthly Charges ($)"]
         customer_vals = [tenure, monthly_charges]
@@ -471,15 +799,15 @@ with tab2:
         x = np.arange(len(metrics))
         width = 0.35
         
-        rects1 = ax.bar(x - width/2, customer_vals, width, label='This Customer', color='#E8534A' if prediction == 1 else '#00d2ff', edgecolor='#ffffff33')
-        rects2 = ax.bar(x + width/2, avg_vals, width, label='Overall Average', color='#ffffff1a', edgecolor='#ffffff33')
+        rects1 = ax.bar(x - width/2, customer_vals, width, label='This Customer', color='#f97316' if prediction == 1 else '#38bdf8', edgecolor='#ffffff33')
+        rects2 = ax.bar(x + width/2, avg_vals, width, label='Overall Average', color='#1e293b', edgecolor='#ffffff33')
         
         ax.set_ylabel('Value', color="#e2e8f0", fontsize=9)
         ax.set_xticks(x)
         ax.set_xticklabels(metrics, color="#e2e8f0", fontsize=9)
         ax.tick_params(colors="#e2e8f0", which='both')
-        ax.legend(framealpha=0.1, labelcolor="#e2e8f0", fontsize=8)
-        ax.grid(True, linestyle='--', alpha=0.1, axis='y')
+        ax.legend(framealpha=0.12, labelcolor="#e2e8f0", fontsize=8)
+        ax.grid(True, linestyle='--', alpha=0.25, axis='y', color="#334155")
         
         ax.spines[["top", "right"]].set_visible(False)
         for spine in ax.spines.values():
@@ -513,7 +841,7 @@ with tab3:
     st.subheader("AI-Driven Retention Strategy")
     
     if st.session_state.customer_data is None:
-        st.info("Please run a prediction in the **Predict Churn** tab first to enable the AI Strategist.", icon="ℹ️")
+        st.info("Please run a prediction in the **Predict Churn** tab first to enable the AI Strategist.")
     else:
         st.markdown("""
         This AI Agent uses **LangGraph** to process customer data, query a **RAG-based** knowledge base 
@@ -534,31 +862,54 @@ with tab3:
         
         st.divider()
         
-        if st.button("🚀 Start Expert AI Analysis", use_container_width=True):
+        if st.button("Start Expert AI Analysis", use_container_width=True):
             with st.status("Senior Agent thinking...", expanded=True) as status:
                 try:
+                    progress_bar = st.progress(0)
+                    eta_text = st.empty()
+                    estimated_total_seconds = 14
+                    start_time = time.time()
+
+                    progress_bar.progress(8)
+                    eta_text.caption(f"Estimated time remaining: ~{estimated_total_seconds}s")
+
                     # Run the agent workflow
                     result = run_retention_agent(
                         st.session_state.customer_data, 
                         st.session_state.churn_prob
                     )
+
+                    progress_bar.progress(65)
+                    elapsed = time.time() - start_time
+                    remaining = max(0, int(estimated_total_seconds - elapsed))
+                    eta_text.caption(f"Estimated time remaining: ~{remaining}s")
                     
                     # Log the thought process
-                    for log_entry in result.get('thought_log', []):
+                    thought_log = result.get('thought_log', [])
+                    total_logs = max(1, len(thought_log))
+                    for i, log_entry in enumerate(thought_log, start=1):
                         st.write(log_entry)
                         time.sleep(0.3)
+                        progress = min(95, 65 + int((i / total_logs) * 30))
+                        progress_bar.progress(progress)
+                        elapsed = time.time() - start_time
+                        remaining = max(0, int(estimated_total_seconds - elapsed))
+                        eta_text.caption(f"Estimated time remaining: ~{remaining}s")
                     
                     st.session_state.agent_result = result['final_report']
                     st.session_state.active_provider = result.get('active_provider', 'Unknown')
+                    progress_bar.progress(100)
+                    total_elapsed = time.time() - start_time
+                    eta_text.caption(f"Completed in {total_elapsed:.1f}s")
                     
                     if st.session_state.active_provider == "Heuristic Mode":
                         status.update(label="Strategy Generated (Safe Mode Fallback)", state="complete", expanded=False)
-                        st.toast("Note: AI Quota reached. Using expert heuristics.", icon="💡")
+                        st.toast("AI quota reached. Using expert heuristics fallback.")
                     else:
                         status.update(label=f"Strategy Formulated via {st.session_state.active_provider}!", state="complete", expanded=False)
                 except Exception as e:
                     st.error(f"Agent Workflow Error: {str(e)}")
-                    st.info("💡 Pro Tip: This usually happens if all API keys are invalid or the network is down.")
+                    st.info("Tip: This typically occurs when API keys are invalid or network access is unavailable.")
                     status.update(label="Operation Failed", state="error")
 
         if st.session_state.agent_result:
