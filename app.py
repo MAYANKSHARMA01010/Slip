@@ -5,6 +5,18 @@ import numpy as np
 import pandas as pd
 import seaborn as sns
 import streamlit as st
+import time
+from agent.agent_engine import run_retention_agent
+
+# Initialize session state for agent reasoning
+if "customer_data" not in st.session_state:
+    st.session_state.customer_data = None
+if "churn_prob" not in st.session_state:
+    st.session_state.churn_prob = 0.0
+if "agent_result" not in st.session_state:
+    st.session_state.agent_result = None
+if "active_provider" not in st.session_state:
+    st.session_state.active_provider = None
 
 warnings.filterwarnings("ignore")
 st.set_page_config(
@@ -108,7 +120,7 @@ pipeline, feature_columns = load_artifacts()
 df = load_data()
 
 st.title("Telco Churn")
-tab1, tab2 = st.tabs(["Data Overview", "Predict Churn"])
+tab1, tab2, tab3 = st.tabs(["Data Overview", "Predict Churn", "🧠 Senior AI Strategist"])
 
 
 with tab1:
@@ -321,7 +333,6 @@ with tab2:
         submitted = st.form_submit_button("Predict Churn", use_container_width=True)
 
     if submitted:
-        import time
         with st.status("Analyzing customer profile...", expanded=True) as status:
             st.write("Extracting demographic and service data...")
             time.sleep(0.5)
@@ -358,6 +369,11 @@ with tab2:
             proba = pipeline.predict_proba(input_df)[0]
             churn_prob = proba[1] * 100
             stay_prob = proba[0] * 100
+            # Save to session state for the agent tab
+            st.session_state.customer_data = input_data
+            st.session_state.churn_prob = churn_prob
+            st.session_state.agent_result = None # Reset agent result for new prediction
+            
             time.sleep(0.5)
             status.update(label="Analysis complete!", state="complete", expanded=False)
             
@@ -492,3 +508,73 @@ with tab2:
             mime="text/csv",
             use_container_width=True
         )
+
+with tab3:
+    st.subheader("AI-Driven Retention Strategy")
+    
+    if st.session_state.customer_data is None:
+        st.info("Please run a prediction in the **Predict Churn** tab first to enable the AI Strategist.", icon="ℹ️")
+    else:
+        st.markdown("""
+        This AI Agent uses **LangGraph** to process customer data, query a **RAG-based** knowledge base 
+        of retention strategies, and generate a personalized intervention plan using **Gemini Flash**.
+        """)
+        
+        c1, c2 = st.columns([1, 1])
+        with c1:
+            st.write("### Target Customer Profile")
+            st.json(st.session_state.customer_data)
+        with c2:
+            st.write("### Risk Context")
+            st.metric("Churn Probability", f"{st.session_state.churn_prob:.1f}%")
+            if st.session_state.churn_prob > 50:
+                st.error("Priority: **CRITICAL** - High Churn Risk")
+            else:
+                st.warning("Priority: **MEDIUM** - Maintenance Mode")
+        
+        st.divider()
+        
+        if st.button("🚀 Start Expert AI Analysis", use_container_width=True):
+            with st.status("Senior Agent thinking...", expanded=True) as status:
+                try:
+                    # Run the agent workflow
+                    result = run_retention_agent(
+                        st.session_state.customer_data, 
+                        st.session_state.churn_prob
+                    )
+                    
+                    # Log the thought process
+                    for log_entry in result.get('thought_log', []):
+                        st.write(log_entry)
+                        time.sleep(0.3)
+                    
+                    st.session_state.agent_result = result['final_report']
+                    st.session_state.active_provider = result.get('active_provider', 'Unknown')
+                    
+                    if st.session_state.active_provider == "Heuristic Mode":
+                        status.update(label="Strategy Generated (Safe Mode Fallback)", state="complete", expanded=False)
+                        st.toast("Note: AI Quota reached. Using expert heuristics.", icon="💡")
+                    else:
+                        status.update(label=f"Strategy Formulated via {st.session_state.active_provider}!", state="complete", expanded=False)
+                except Exception as e:
+                    st.error(f"Agent Workflow Error: {str(e)}")
+                    st.info("💡 Pro Tip: This usually happens if all API keys are invalid or the network is down.")
+                    status.update(label="Operation Failed", state="error")
+
+        if st.session_state.agent_result:
+            if st.session_state.active_provider != "Heuristic Mode":
+                st.success(f"Analysis Complete! (Generated via **{st.session_state.active_provider}**)")
+            else:
+                st.info("Expert Strategy Ready (Heuristic Fallback)")
+                
+            st.markdown(st.session_state.agent_result)
+            
+            # Export Agent Report
+            report_text = f"TELCO CHURN STRATEGY REPORT\n\n{st.session_state.agent_result}"
+            st.download_button(
+                label="Download Full Retention Report",
+                data=report_text,
+                file_name="retention_strategy_report.md",
+                mime="text/markdown",
+                use_container_width=True
+            )
