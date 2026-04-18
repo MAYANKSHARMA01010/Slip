@@ -65,20 +65,21 @@ st.markdown("""
 
     /* Buttons */
     div.stButton > button {
-        background: linear-gradient(135deg, #00d2ff 0%, #3a7bd5 100%);
+        background: #1d4ed8;
         color: white;
-        border: none;
+        border: 1px solid #1e40af;
         border-radius: 8px;
         padding: 0.5rem 1rem;
         font-weight: 600;
         transition: all 0.3s ease;
-        box-shadow: 0 4px 15px rgba(0, 210, 255, 0.4);
+        box-shadow: 0 4px 12px rgba(29, 78, 216, 0.35);
     }
     div.stButton > button:hover {
         transform: translateY(-2px);
-        box-shadow: 0 6px 20px rgba(0, 210, 255, 0.6);
+        box-shadow: 0 6px 16px rgba(29, 78, 216, 0.45);
+        background: #1e40af;
         color: white;
-        border-color: transparent;
+        border-color: #1e3a8a;
     }
 
     /* Tabs formatting */
@@ -92,37 +93,106 @@ st.markdown("""
         border-color: rgba(255, 255, 255, 0.1) !important;
     }
 
-    /* Landing page */
+    /* Landing page - premium hero */
+    .home-shell {
+        border: 1px solid #1f2937;
+        border-radius: 22px;
+        padding: 1.1rem 1.2rem 1.8rem 1.2rem;
+        background: #0b1220;
+        box-shadow: 0 16px 40px rgba(0, 0, 0, 0.28);
+    }
+
+    .home-nav {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 1rem;
+        padding: 0.2rem 0.2rem 1.2rem 0.2rem;
+        border-bottom: 1px solid #1f2937;
+        margin-bottom: 1.7rem;
+    }
+
+    .home-brand {
+        color: #f8fafc;
+        font-size: 1.25rem;
+        font-weight: 700;
+        letter-spacing: 0.2px;
+    }
+
+    .home-nav-links {
+        color: #94a3b8;
+        font-size: 0.92rem;
+        font-weight: 500;
+        display: flex;
+        gap: 1.2rem;
+        flex-wrap: wrap;
+        justify-content: flex-end;
+    }
+
     .home-hero {
-        padding: 2.2rem 1.8rem;
-        border-radius: 16px;
-        border: 1px solid rgba(0, 210, 255, 0.25);
-        background: radial-gradient(circle at top right, rgba(58, 123, 213, 0.18), rgba(2, 6, 23, 0.7));
-        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
-        margin-bottom: 1.2rem;
+        padding: 1.2rem 1rem 0.6rem 1rem;
+        text-align: center;
+    }
+
+    .home-title {
+        color: #f8fafc;
+        font-size: clamp(2rem, 4.6vw, 4.1rem);
+        line-height: 1.08;
+        letter-spacing: -0.02em;
+        margin-bottom: 0.9rem;
+        font-weight: 700;
+    }
+
+    .home-subtitle {
+        color: #aab8cc;
+        max-width: 860px;
+        margin: 0 auto 1.4rem auto;
+        font-size: clamp(1rem, 1.4vw, 1.25rem);
+    }
+
+    .home-pill-row {
+        display: flex;
+        justify-content: center;
+        gap: 0.6rem;
+        flex-wrap: wrap;
+        margin-top: 0.7rem;
+    }
+
+    .home-chip {
+        display: inline-block;
+        border: 1px solid #334155;
+        color: #dbeafe;
+        background: #111827;
+        border-radius: 999px;
+        padding: 0.34rem 0.8rem;
+        font-size: 0.78rem;
     }
 
     .home-card {
-        background: rgba(15, 23, 42, 0.72);
-        border: 1px solid rgba(148, 163, 184, 0.2);
+        margin-top: 1.2rem;
+        background: #0f172a;
+        border: 1px solid #1f2937;
         border-radius: 14px;
         padding: 1rem 1.1rem;
-        min-height: 185px;
+        min-height: 170px;
     }
 
     .home-subtle {
         color: #cbd5e1;
     }
 
-    .home-chip {
-        display: inline-block;
-        border: 1px solid rgba(0, 210, 255, 0.35);
-        color: #e2e8f0;
-        background: rgba(0, 210, 255, 0.1);
-        border-radius: 999px;
-        padding: 0.25rem 0.65rem;
-        margin: 0.2rem 0.25rem 0.2rem 0;
-        font-size: 0.8rem;
+    .home-metric-label {
+        color: #94a3b8;
+        font-size: 0.82rem;
+        margin-top: 0.3rem;
+    }
+
+    .home-flow {
+        margin-top: 1rem;
+        border: 1px solid #1f2937;
+        background: #0f172a;
+        border-radius: 14px;
+        padding: 1rem 1.1rem;
     }
 </style>
 """, unsafe_allow_html=True)
@@ -158,16 +228,32 @@ df = load_data()
 def render_home_page():
     st.markdown(
         """
-        <div class="home-hero">
-            <h1 style="margin-bottom:0.3rem;">🚀 Telco Churn Intelligence Suite</h1>
-            <p class="home-subtle" style="font-size:1.05rem; margin-bottom:1rem;">
-                A decision-support app that predicts customer churn risk and generates
-                AI-assisted retention strategies for high-value telecom customers.
-            </p>
-            <span class="home-chip">ML Prediction</span>
-            <span class="home-chip">RAG + Agentic Reasoning</span>
-            <span class="home-chip">Interactive Dashboard</span>
-            <span class="home-chip">Exportable Reports</span>
+        <div class="home-shell">
+            <div class="home-nav">
+                <div class="home-brand">TelcoAI</div>
+                <div class="home-nav-links">
+                    <span>Products</span>
+                    <span>Docs</span>
+                    <span>Ecosystem</span>
+                    <span>Resources</span>
+                    <span>Pricing</span>
+                </div>
+            </div>
+            <div class="home-hero">
+                <div class="home-title">
+                    Predict telecom churn early,<br/>retain customers with AI strategies
+                </div>
+                <p class="home-subtitle">
+                    This platform combines a production-ready machine learning pipeline with agentic reasoning
+                    to transform churn probability into practical, customer-specific retention actions.
+                </p>
+                <div class="home-pill-row">
+                    <span class="home-chip">ML Prediction Engine</span>
+                    <span class="home-chip">RAG Knowledge Base</span>
+                    <span class="home-chip">Executive Dashboard</span>
+                    <span class="home-chip">Downloadable Reports</span>
+                </div>
+            </div>
         </div>
         """,
         unsafe_allow_html=True,
@@ -180,8 +266,8 @@ def render_home_page():
             <div class="home-card">
                 <h4>What this project does</h4>
                 <p class="home-subtle">
-                    It estimates churn probability using a trained ML pipeline, then
-                    turns the prediction into practical business recommendations.
+                    The app estimates churn probability from customer profile data and
+                    converts model outputs into business-focused retention guidance.
                 </p>
             </div>
             """,
@@ -193,8 +279,8 @@ def render_home_page():
             <div class="home-card">
                 <h4>How it works</h4>
                 <p class="home-subtle">
-                    Input customer profile → preprocess with model artifacts → score churn risk
-                    → invoke AI strategist powered by LangGraph + RAG for intervention plans.
+                    Input customer attributes, process via trained artifacts, generate risk scores,
+                    and activate an AI strategist powered by LangGraph and RAG for intervention planning.
                 </p>
             </div>
             """,
@@ -206,8 +292,8 @@ def render_home_page():
             <div class="home-card">
                 <h4>Supported data now</h4>
                 <p class="home-subtle">
-                    Structured customer fields (CSV/form), model artifacts (<code>.pkl</code>),
-                    markdown strategy knowledge base, and FAISS vector indexes for retrieval.
+                    Structured customer records (CSV/form fields), model artifacts, markdown strategy
+                    documents, and FAISS vector indexes used for retrieval-augmented planning.
                 </p>
             </div>
             """,
@@ -224,15 +310,30 @@ def render_home_page():
     kb_ready = os.path.exists("knowledge_base/retention_strategies.md")
 
     k1, k2, k3, k4 = st.columns(4)
-    k1.metric("Dataset Rows", f"{len(df):,}")
-    k2.metric("Model Features", f"{len(feature_columns)}")
-    k3.metric("Knowledge Base", "Ready" if kb_ready else "Missing")
-    k4.metric("Vector Index", "Ready" if vector_index_ready else "Missing")
+    with k1:
+        st.markdown('<div class="home-metric-label">Dataset Rows</div>', unsafe_allow_html=True)
+        st.markdown(f"### {len(df):,}")
+    with k2:
+        st.markdown('<div class="home-metric-label">Model Features</div>', unsafe_allow_html=True)
+        st.markdown(f"### {len(feature_columns)}")
+    with k3:
+        st.markdown('<div class="home-metric-label">Knowledge Base</div>', unsafe_allow_html=True)
+        st.markdown(f"### {'Ready' if kb_ready else 'Missing'}")
+    with k4:
+        st.markdown('<div class="home-metric-label">Vector Index</div>', unsafe_allow_html=True)
+        st.markdown(f"### {'Ready' if vector_index_ready else 'Missing'}")
 
-    st.markdown("### Product Flow")
-    st.markdown("1. Explore churn trends in the analytics dashboard.")
-    st.markdown("2. Predict churn probability for any customer profile.")
-    st.markdown("3. Generate an expert retention plan and download results.")
+    st.markdown(
+        """
+        <div class="home-flow">
+            <h3 style="margin-bottom:0.5rem;">Product Flow</h3>
+            <p class="home-subtle">1. Explore churn trends in the analytics dashboard.</p>
+            <p class="home-subtle">2. Predict churn probability for any customer profile.</p>
+            <p class="home-subtle">3. Generate an expert retention strategy and download the report.</p>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
 
     if st.button("Enter Dashboard", use_container_width=True):
         st.session_state.show_dashboard = True
@@ -244,7 +345,7 @@ if not st.session_state.show_dashboard:
     st.stop()
 
 with st.sidebar:
-    if st.button("🏠 Back to Home", use_container_width=True):
+    if st.button("Back to Home", use_container_width=True):
         st.session_state.show_dashboard = False
         st.rerun()
 
