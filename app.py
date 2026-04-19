@@ -14,10 +14,10 @@ from rich.console import Console # pyright: ignore[reportMissingImports]
 from rich.panel import Panel # pyright: ignore[reportMissingImports]
 from agent.agent_engine import process_customer_retention
 
-# ── Rich console for terminal logs ─────────────────────────────────────────────
+# Initialize the console for descriptive terminal logging.
 console = Console()
 
-# ── Session state init ─────────────────────────────────────────────────────────
+# Track session data, results, and active tabs to maintain state across reruns.
 for key, default in {
     "customer_data": None,
     "churn_prob": 0.0,
@@ -31,7 +31,7 @@ for key, default in {
 
 warnings.filterwarnings("ignore")
 
-# ── Page config ────────────────────────────────────────────────────────────────
+# Configure dashboard metadata and sidebar layout.
 st.set_page_config(
         page_title="Slip — Telco Churn Intelligence",
         page_icon="📡",
@@ -39,7 +39,7 @@ st.set_page_config(
         initial_sidebar_state="expanded",
 )
 
-# Smooth scroll to top on rerun/page change (robust for Streamlit)
+# Enable smooth scrolling for a better user experience on page changes.
 st.markdown("""
 <style>
 html { scroll-behavior: smooth; }
@@ -55,7 +55,7 @@ scrollToTop();
 </script>
 """, unsafe_allow_html=True)
 
-# ── Global CSS ─────────────────────────────────────────────────────────────────
+# Define global aesthetic styles including glassmorphism and custom animations.
 st.markdown("""
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
@@ -73,13 +73,13 @@ html, body, [class*="css"] {
 }
 .main { animation: fadeUp 0.55s ease-out; }
 
-/* ── Sidebar ── */
+/* Navigation and Branding */
 section[data-testid="stSidebar"] {
     background: #0b1220;
     border-right: 1px solid #1e2d45;
 }
 section[data-testid="stSidebar"] * { color: #cbd5e1 !important; }
-/* ── Platform Status ── */
+/* Live System Status Indicator */
 .status-pill {
     background: rgba(16, 185, 129, 0.1);
     border: 1px solid rgba(16, 185, 129, 0.3);
@@ -92,7 +92,7 @@ section[data-testid="stSidebar"] * { color: #cbd5e1 !important; }
 }
 .status-dot { width: 6px; height: 6px; background: #10b981; border-radius: 50%; box-shadow: 0 0 8px #10b981; }
 
-/* ── Metric cards ── */
+/* High-Fidelity Metric Cards */
 div[data-testid="metric-container"] {
     background: rgba(15, 23, 42, 0.85);
     backdrop-filter: blur(12px);
@@ -112,7 +112,7 @@ div[data-testid="metric-container"] [data-testid="stMetricValue"] {
     color: #f8fafc !important; font-size: 1.6rem !important; font-weight: 700;
 }
 
-/* ── Buttons ── */
+/* Consistent Interactive Buttons */
 div.stButton > button {
     background: linear-gradient(135deg, #1d4ed8 0%, #1e40af 100%);
     color: white !important;
@@ -131,7 +131,7 @@ div.stButton > button:hover {
     background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
 }
 
-/* ── Section cards ── */
+/* Sectional Card Containers */
 .section-card {
     background: rgba(15, 30, 54, 0.65);
     backdrop-filter: blur(16px);
@@ -148,7 +148,7 @@ div.stButton > button:hover {
     box-shadow: 0 15px 45px rgba(0,0,0,0.5);
 }
 
-/* ── Hero shell ── */
+/* Hero Shell and Landing Visuals */
 .hero-shell {
     background: linear-gradient(135deg, #070d1a 0%, #0c1830 60%, #091526 100%);
     border: 1px solid #1e2d45;
@@ -202,7 +202,7 @@ div.stButton > button:hover {
 .flow-step { color: #94a3b8; font-size: 0.93rem; margin-bottom: 0.35rem; }
 .flow-step strong { color: #38bdf8; }
 
-/* ── App header ── */
+/* Application Branding Elements */
 .app-header {
     background: linear-gradient(90deg, #0f1e36 0%, #0a1628 100%);
     border: 1px solid #1e2d45; border-radius: 16px; padding: 1.1rem 1.4rem;
@@ -217,10 +217,10 @@ div.stButton > button:hover {
     border-radius: 999px; padding: 0.2rem 0.65rem; font-size: 0.76rem; font-weight: 500;
 }
 
-/* ── Divider ── */
+/* Layout Spacing */
 hr { border-color: rgba(255,255,255,0.07) !important; }
 
-/* ── Tabs ── */
+/* Custom Navigation Tabs */
 button[role="tab"] {
     font-weight: 600; font-size: 0.93rem; padding: 0.45rem 0.85rem; color: #64748b;
     border-radius: 8px 8px 0 0; transition: all 0.2s ease;
@@ -228,7 +228,7 @@ button[role="tab"] {
 button[role="tab"]:hover { color: #e2e8f0; background: #0f1e36; }
 button[role="tab"][aria-selected="true"] { color: #38bdf8 !important; background: #0f1e36; }
 
-/* ── Download buttons ── */
+/* Download and Export Controls */
 div.stDownloadButton > button {
     background: #111827 !important;
     border: 1px solid #1e2d45 !important;
@@ -241,13 +241,12 @@ div.stDownloadButton > button:hover {
     background: #0f1e36 !important;
 }
 
-/* ── Status / Info / Error / Warning overrides ── */
+/* Streamlit Native UI Overrides */
 div[data-testid="stAlert"] { border-radius: 10px; }
 </style>
 """, unsafe_allow_html=True)
 
-# ── Plotly chart theme ─────────────────────────────────────────────────────────
-# Base layout — only keys that are NEVER overridden per-chart
+# Define a custom Plotly theme for visual consistency with the dark UI.
 PLOTLY_LAYOUT = dict(
     paper_bgcolor="rgba(0,0,0,0)",
     plot_bgcolor="#0a1628",
@@ -255,12 +254,11 @@ PLOTLY_LAYOUT = dict(
     colorway=["#38bdf8", "#f97316", "#a78bfa", "#34d399"],
     hoverlabel=dict(bgcolor="#0f1e36", bordercolor="#1e2d45", font_size=13),
 )
-# Default axis / margin styles (used by apply_layout helper below)
 _AXIS_STYLE = dict(gridcolor="#1e2d45", linecolor="#1e2d45", zerolinecolor="#1e2d45")
 _DEFAULT_MARGIN = dict(l=16, r=16, t=32, b=16)
 
 def apply_layout(fig, height=None, margin=None, xaxis=None, yaxis=None, **extra):
-    """Apply PLOTLY_LAYOUT + per-chart overrides without duplicate-key errors."""
+    """Apply PLOTLY_LAYOUT and per-chart overrides."""
     layout_params = {**PLOTLY_LAYOUT}
     
     if height: 
@@ -270,7 +268,6 @@ def apply_layout(fig, height=None, margin=None, xaxis=None, yaxis=None, **extra)
     layout_params["xaxis"]  = {**_AXIS_STYLE, **(xaxis or {})}
     layout_params["yaxis"]  = {**_AXIS_STYLE, **(yaxis or {})}
     
-    # Merge any extra layout properties (e.g., custom font, barmode)
     layout_params.update(extra)
     
     fig.update_layout(**layout_params)
@@ -281,15 +278,13 @@ ORG   = "#f97316"
 PURP  = "#a78bfa"
 GREEN = "#34d399"
 
-# ── Artifacts / data ───────────────────────────────────────────────────────────
 import joblib
 
-# Auto-train and save model artifacts if missing
+# Automatically train and save model artifacts if they are missing.
 ARTIFACTS = ["model_pipeline.pkl", "feature_columns.pkl"]
 def train_and_save_artifacts():
     df = pd.read_csv("telco_customer_churn.csv").drop(columns=["customerID"])
     df["TotalCharges"] = df["TotalCharges"].replace({" ": "0.0"}).astype(float)
-    # Ensure correct dtypes: SeniorCitizen as int, gender as string, etc.
     df["SeniorCitizen"] = df["SeniorCitizen"].astype(int)
     df["gender"] = df["gender"].astype(str)
     from sklearn.model_selection import train_test_split
@@ -321,7 +316,7 @@ def train_and_save_artifacts():
 
 @st.cache_resource
 def load_artifacts():
-    for _ in range(2):  # Try twice: first try, then retrain if needed
+    for _ in range(2):
         try:
             pipeline = joblib.load("model_pipeline.pkl")
             feature_columns = joblib.load("feature_columns.pkl")
@@ -344,9 +339,7 @@ pipeline, feature_columns = load_artifacts()
 df = load_data()
 console.print(Panel("[bold green]Slip Dashboard loaded[/bold green]", title="[cyan]startup[/cyan]"))
 
-# ══════════════════════════════════════════════════════════════════════════════
-#  HOME PAGE
-# ══════════════════════════════════════════════════════════════════════════════
+# Render the landing page for initial user interaction.
 def render_home_page():
     st.markdown("""
     <div class="hero-shell">
@@ -375,8 +368,6 @@ def render_home_page():
         </div>
     </div>
     """, unsafe_allow_html=True)
-
-    # Removed unnecessary vertical space for better UX
 
     vector_index_ready = any(os.path.exists(p) for p in [
         "vectorstore/db_faiss/index.faiss",
@@ -448,9 +439,7 @@ if not st.session_state.show_dashboard:
     render_home_page()
     st.stop()
 
-# ══════════════════════════════════════════════════════════════════════════════
-#  SIDEBAR  (option-menu nav)
-# ══════════════════════════════════════════════════════════════════════════════
+# Sidebar navigation to control the platform's active phase.
 with st.sidebar:
     st.markdown("""
     <div style="padding:0.8rem 0 1.2rem; border-bottom:1px solid #1e2d45; margin-bottom:1rem;">
@@ -484,7 +473,6 @@ with st.sidebar:
 
     st.markdown("<br>", unsafe_allow_html=True)
 
-    # Quick dataset stats
     churn_rate = (df["Churn"] == "Yes").sum() / len(df) * 100
     st.markdown(f"""
     <div style="background:#0a1628;border:1px solid #1e2d45;border-radius:12px;padding:0.9rem 1rem;">
@@ -509,7 +497,7 @@ with st.sidebar:
         st.session_state.show_dashboard = False
         st.rerun()
 
-# ── App header ─────────────────────────────────────────────────────────────────
+# App header section.
 st.markdown("""
 <div class="app-header">
     <div class="app-header-icon">📡</div>
@@ -520,9 +508,7 @@ st.markdown("""
 </div>
 """, unsafe_allow_html=True)
 
-# ══════════════════════════════════════════════════════════════════════════════
-#  TAB 1 — OVERVIEW
-# ══════════════════════════════════════════════════════════════════════════════
+# Overview phase: Explore historical churn trends and behavioral distributions.
 if selected == "Overview":
     st.markdown(f"""
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
@@ -536,7 +522,7 @@ if selected == "Overview":
         </div>
     """, unsafe_allow_html=True)
 
-    # ── KPI EXECUTIVE SUMMARY ──
+    # Executive summary of key performance indicators.
     kpi1, kpi2, kpi3, kpi4 = st.columns(4)
     with kpi1: st.metric("Total Base", f"{len(df):,}", help="Active subscribers in dataset")
     with kpi2: st.metric("Churn Rate", f"{(df['Churn'].value_counts(normalize=True).get('Yes', 0)*100):.1f}%", delta="-0.8%", delta_color="normal")
@@ -546,7 +532,6 @@ if selected == "Overview":
 
     st.markdown("<br>", unsafe_allow_html=True)
 
-    # ── Row 1: donut + contract bar ──
     c1, c2 = st.columns(2)
 
     with c1:
@@ -583,7 +568,6 @@ if selected == "Overview":
         st.plotly_chart(fig, width='stretch')
         st.markdown('</div>', unsafe_allow_html=True)
 
-    # ── Row 2: tenure histogram + monthly charges violin ──
     c3, c4 = st.columns(2)
 
     with c3:
@@ -613,7 +597,6 @@ if selected == "Overview":
         st.plotly_chart(fig, width='stretch')
         st.markdown('</div>', unsafe_allow_html=True)
 
-    # ── Row 3: internet service + heatmap ──
     if "InternetService" in df.columns and "Churn" in df.columns:
         st.markdown('<div class="section-card">', unsafe_allow_html=True)
         st.subheader("Internet Service vs Churn")
@@ -628,7 +611,6 @@ if selected == "Overview":
         st.plotly_chart(fig, width='stretch')
         st.markdown('</div>', unsafe_allow_html=True)
     
-    # ── Correlation heatmap  ──
     num_cols = [col for col in ["tenure", "MonthlyCharges", "TotalCharges"] if col in df.columns]
     if len(num_cols) >= 2:
         st.markdown('<div class="section-card">', unsafe_allow_html=True)
@@ -649,16 +631,13 @@ if selected == "Overview":
         st.subheader("Sample Data (first 100 rows)")
         st.dataframe(df.head(100), width='stretch')
 
-# ══════════════════════════════════════════════════════════════════════════════
-#  TAB 2 — CHURN PREDICTION
-# ══════════════════════════════════════════════════════════════════════════════
+# Churn Prediction phase: Calculate risk for specific customer profiles.
 elif selected == "Churn Prediction":
     st.markdown('<div class="section-card">', unsafe_allow_html=True)
     st.markdown("### 📋 Customer Profile Intelligence")
     st.caption("Enter the customer details below to calculate churn probability and generate retention strategies.")
     
     with st.form("prediction_form", border=False):
-        # ── CONTACT & BASICS ──
         st.markdown("#### 👤 Step 1: Identity & Basics")
         c_i1, c_i2, c_i3 = st.columns([1, 1.2, 1])
         with c_i1: customer_name  = st.text_input("Full Name", value="", placeholder="e.g. John Doe")
@@ -667,7 +646,6 @@ elif selected == "Churn Prediction":
         
         st.markdown("<br>", unsafe_allow_html=True)
         
-        # ── ACCOUNT & SUBSCRIPTION ──
         st.markdown("#### 💳 Step 2: Account & Subscription")
         a1, a2, a3 = st.columns(3)
         with a1:
@@ -685,7 +663,6 @@ elif selected == "Churn Prediction":
 
         st.markdown("<br>", unsafe_allow_html=True)
         
-        # ── DEMOGRAPHICS & SERVICES ──
         st.markdown("#### 🛠️ Step 3: Service & Technical Profile")
         
         d1, d2 = st.columns(2)
@@ -716,8 +693,6 @@ elif selected == "Churn Prediction":
         submitted = st.form_submit_button("🚀 Run Churn Analysis", width='stretch')
     st.markdown('</div>', unsafe_allow_html=True)
 
-
-
     if submitted and not is_valid_email(customer_email):
         st.error("Please enter a valid email address before running prediction.")
 
@@ -729,11 +704,9 @@ elif selected == "Churn Prediction":
             time.sleep(0.4)
             st.write("Executing predictive model...")
 
-
-            # Only include columns used in training (feature_columns)
             input_data = {
                 "gender": gender,
-                "SeniorCitizen": 1 if senior_citizen == "Yes" else 0,  # Pass as int, matching CSV
+                "SeniorCitizen": 1 if senior_citizen == "Yes" else 0,
                 "Partner": partner, "Dependents": dependents,
                 "tenure": tenure, "PhoneService": phone_service,
                 "MultipleLines": multiple_lines, "InternetService": internet_service,
@@ -765,7 +738,7 @@ elif selected == "Churn Prediction":
         st.markdown('<div class="section-card">', unsafe_allow_html=True)
         st.subheader("🎯 Analytical Verdict")
         
-        # ── PREMIUM RISK CARD ──
+        # Visualize the final risk verdict with a high-fidelity risk card.
         status_color = "#f43f5e" if prediction == 1 else "#10b981"
         status_bg    = "rgba(244, 63, 94, 0.08)" if prediction == 1 else "rgba(16, 185, 129, 0.08)"
         status_icon  = "⚠️" if prediction == 1 else "✅"
@@ -910,9 +883,7 @@ elif selected == "Churn Prediction":
         st.download_button("📥  Download Prediction as CSV", csv_data,
                            "churn_prediction_result.csv", "text/csv", width='stretch')
 
-# ══════════════════════════════════════════════════════════════════════════════
-#  TAB 3 — AI STRATEGIST
-# ══════════════════════════════════════════════════════════════════════════════
+# Phase 3: Conversing with the AI Strategist for personalized actions.
 elif selected == "AI Strategist":
     st.subheader("AI-Driven Retention Strategy")
 
@@ -1046,9 +1017,7 @@ elif selected == "AI Strategist":
                 """, unsafe_allow_html=True)
             except Exception:
                 pass
-# ══════════════════════════════════════════════════════════════════════════════
-#  TAB 4 — MODEL PERFORMANCE
-# ══════════════════════════════════════════════════════════════════════════════
+# Phase 4: Validating the underlying ML model and pipeline health.
 elif selected == "Model Performance":
     st.subheader("Model Performance & Diagnostics")
     st.caption("Detailed view of the trained Machine Learning pipeline and its evaluation metrics.")

@@ -9,22 +9,24 @@ from agent.rag_utils import get_vector_db
 
 load_dotenv()
 
-# --- State Definition ---
+# We define the shape of our agent's memory here. 
+# This state is passed between nodes to keep the 'Chain of Thought' intact.
 class AgentState(TypedDict):
-    customer_data: dict
-    churn_probability: float
-    user_query: str
-    retrieved_strategies: str
-    analysis: str
-    final_report: str
-    active_provider: str
-    thought_log: List[str]
+    customer_data: dict          # Raw profile from the dashboard
+    churn_probability: float     # Score from our ML pipeline
+    user_query: str              # Personalization focus from the user
+    retrieved_strategies: str    # Context pulled from the FAISS database
+    analysis: str               # The agent's reasoning about risk themes
+    final_report: str           # The professional output for the user
+    active_provider: str         # Which AI model (Gemini/Groq/etc.) succeeded
+    thought_log: List[str]       # A step-by-step log for the UI status updates
 
-# --- Nodes ---
+# --- Core Reasoning Nodes ---
 
 def get_llm_response(prompt: str, log: List[str], state: AgentState):
     """
-    Attempts to get a response from multiple AI providers in order of preference.
+    This is our fallback-safe execution layer. 
+    It cycles through multiple AI providers to ensure the agent stays online.
     """
     providers = [
         {"name": "Google Gemini", "env_key": "GOOGLE_API_KEY", "class": ChatGoogleGenerativeAI, "model": "gemini-flash-latest"},
@@ -36,6 +38,7 @@ def get_llm_response(prompt: str, log: List[str], state: AgentState):
         api_key = os.getenv(provider["env_key"])
         if api_key and api_key != "your_api_key_here":
             try:
+                # Configuring the specific LLM client
                 if provider["name"] == "Google Gemini":
                     llm = provider["class"](model=provider["model"], google_api_key=api_key)
                 else:
@@ -54,11 +57,12 @@ def get_llm_response(prompt: str, log: List[str], state: AgentState):
                 log.append(f"⚠️ {provider['name']} failed: {str(e)[:100]}...")
                 continue
     
+    # If all AI providers fail, we signal the switch to Heuristic Mode.
     return None, "Heuristic Mode"
 
 def analyze_customer(state: AgentState):
     """
-    Analyzes the raw customer data and churn probability to identify key risk themes.
+    Node 1: Look at the customer's data and summarize why they might leave.
     """
     data = state['customer_data']
     prob = state['churn_probability']
@@ -82,6 +86,7 @@ def analyze_customer(state: AgentState):
     
     analysis, provider = get_llm_response(analysis_prompt, log, state)
     
+    # Fallback reasoning if the AI is unreachable
     if not analysis:
         analysis = f"Strategic Analysis: High risk detected for {data['Contract']} customer with {data['InternetService']} service. Priorities: Contract stability and service value."
         log.append("💡 Switching to heuristic mode for this step.")
@@ -90,11 +95,12 @@ def analyze_customer(state: AgentState):
 
 def retrieve_knowledge(state: AgentState):
     """
-    Queries the vector database for relevant retention strategies.
+    Node 2: Search our internal playbook for strategies that match the analysis.
     """
     db = get_vector_db()
     query = f"Retention strategies for {state['analysis']}"
     
+    # We pull the 3 most relevant sections from our Markdown knowledge base.
     docs = db.similarity_search(query, k=3)
     
     strategies = []
@@ -110,7 +116,7 @@ def retrieve_knowledge(state: AgentState):
 
 def generate_report(state: AgentState):
     """
-    Synthesizes analysis and knowledge into a professional report.
+    Node 3: Synthesize the analysis and knowledge into a finalize report and email draft.
     """
     customer_name = state["customer_data"].get("CustomerName", "Customer")
     customer_email = state["customer_data"].get("CustomerEmail", "")
@@ -149,6 +155,7 @@ def generate_report(state: AgentState):
     
     final_report, provider = get_llm_response(prompt, log, state)
     
+    # If the generator fails, we provide a structured strategic response from expert rules.
     if not final_report:
         heuristic_report = f"""
 **1. Executive Risk Summary**
@@ -173,23 +180,31 @@ AI-generated. Review by professional required.
 
     return {"final_report": final_report, "active_provider": provider, "thought_log": log}
 
-# --- Graph Construction ---
+# --- Graph Assembly ---
 
 def create_agent():
+    """
+    We assemble the nodes into a workflow (DAG) using LangGraph.
+    """
     workflow = StateGraph(AgentState)
+    
+    # Define our three-step logic
     workflow.add_node("analyze", analyze_customer)
     workflow.add_node("retrieve", retrieve_knowledge)
     workflow.add_node("generate", generate_report)
+    
+    # Define the sequence
     workflow.set_entry_point("analyze")
     workflow.add_edge("analyze", "retrieve")
     workflow.add_edge("retrieve", "generate")
     workflow.add_edge("generate", END)
+    
     return workflow.compile()
 
-# --- Execution Entry ---
+# --- Execution Entry Point ---
 def process_customer_retention(customer_data: dict, churn_prob: float, user_query: str = ""):
     """
-    Final entry point name to break all cached module links.
+    The main entry point for the Streamlit dashboard to interact with the AI Strategist.
     """
     agent = create_agent()
     initial_state = {
