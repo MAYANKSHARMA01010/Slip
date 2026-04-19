@@ -14,83 +14,45 @@ We worked with the **Telco Customer Churn** dataset, which captures real world c
 
 ---
 
-### Constraints & Requirements
+### Milsestones & Documentation
 
-This project was built within a set of guidelines to keep things fair, consistent, and accessible for everyone on the team.
+#### Milestone 1: ML-Based Churn Prediction (Mid-Sem)
+- **Problem Context**: [Business Context & Problem Understanding](docs/business_context.md)
+- **Model Training**: [Model Performance Evaluation Report](docs/model_report.md)
+- **UI Dashboard**: Interactive Streamlit application with real-time inference.
 
-We worked as a team of **3 to 4 students**, collaborating across data exploration, model building, UI development, and documentation. Everything was built using **free tier tools only**, meaning we stuck to open source models and APIs that don't require paid subscriptions. No hidden costs, no premium keys.
-
-For the agent based components in Milestone 2, **LangGraph** is the recommended framework. It gives us the flexibility to define agent workflows with clean state management and tool integration.
-
-One important rule: the final version of the project **must be hosted and publicly accessible**. A localhost only demo won't be accepted for the end semester submission. We're expected to deploy using platforms like **Hugging Face Spaces**, **Streamlit Cloud**, or **Render** so that anyone with the link can try it out.
-
----
-
-### Technology Stack
-
-Here's a quick summary of the tools and technologies powering each part of the project.
-
-| Component | Technology |
-| :--- | :--- |
-| **ML Models** | Random Forest (final), Decision Tree, XGBoost (evaluated), Scikit Learn Pipeline |
-| **Class Balancing** | SMOTE (Imbalanced Learn) |
-| **UI Framework** | Streamlit (with custom glassmorphism CSS) |
-| **Data Handling** | Pandas, NumPy |
-| **Visualization** | Matplotlib, Seaborn |
-| **Model Persistence** | Joblib |
-
-We chose **Streamlit** for the frontend because it lets us build interactive dashboards with minimal boilerplate, perfect for quickly turning a machine learning pipeline into something visual and usable. For the ML side, **Scikit Learn** handles the full pipeline from preprocessing (Label Encoding + SMOTE) through to model training and evaluation. We evaluated Decision Tree, **Random Forest**, and XGBoost using 5-fold cross-validation, then selected **Random Forest** as the final model for its superior accuracy and robustness. **Matplotlib** and **Seaborn** power all the charts, and **Joblib** takes care of saving and loading the trained pipeline artifacts.
-
-For a deep dive into every library and why we chose it, check out our **[Technology Stack & Libraries Guide](docs/TECH_STACK.md)**.
+#### Milestone 2: Agentic AI Retention Strategy (End-Sem)
+- **Workflow & State**: [Agent Workflow Documentation](docs/agent_workflow.md)
+- **System Design**: [Architecture Diagram](docs/architecture_diagram.md)
+- **RAG Implementation**: Knowledge retrieval using FAISS and LangGraph.
+- **Interactive Strategist**: Support for custom user queries and structured retention plans.
 
 ---
 
-### System Architecture
+### 🚀 Quick Start
 
-Here is the high-level system design architecture for the agentic retention strategy pipeline:
-
-![System Architecture](docs/images/architecture.png)
-
----
-
-### Milestones & Deliverables
-
-#### Milestone 1: ML Based Churn Prediction (Mid Sem)
-
-The goal here was to identify customers at risk of leaving using historical behavioral data, focusing entirely on classical ML techniques without any LLMs.
-
-**What we delivered:**
-
-1. A thorough understanding of the business problem and the context behind customer churn in telecom.
-2. A complete data exploration and preprocessing pipeline inside `churn.ipynb`, including handling missing values, encoding categorical features, and balancing the dataset with SMOTE.
-3. Trained and evaluated Decision Tree, Random Forest, and XGBoost via 5-fold cross-validation, selected **Random Forest** as the final model, with full performance reports (Accuracy, Precision, Recall, F1 Score, Confusion Matrix).
-4. A working Streamlit dashboard (`app.py`) featuring a Data Overview tab with interactive visualizations (churn distribution, contract analysis, tenure histograms, monthly charges comparison) and a Predict Churn tab where users can input customer details and get real time predictions with probability scores, key risk factors, personalized retention recommendations, and a customer vs average comparison chart.
-5. An export feature that lets users download prediction results as a CSV file.
-
-### Quick Start
-
-If you're on macOS/Linux, run these commands to get started immediately:
+To run the platform locally:
 
 ```bash
-# 1. Create virtual environment
-python3 -m venv .venv
+# 1. Setup virtual environment
+python3 -m venv .venv && source .venv/bin/activate
 
-# 2. Activate it
-source .venv/bin/activate
-
-# 3. Install dependencies
+# 2. Install dependencies
 pip install -r requirements.txt
 
-# 4. Run the dashboard
+# 3. Launch Intelligence Center
 streamlit run app.py
 ```
 
-### Setup and Installation
-
-Ready to run this project yourself? Check out our detailed **[Setup and Installation Guide](docs/SETUP_GUIDE.md)** for more in-depth instructions.
+### 📖 Full Project Documentation
+- **[Business Context & Problem Statement](docs/business_context.md)**
+- **[Model Performance & Selection Report](docs/model_report.md)**
+- **[Agent Architecture & Workflow Guide](docs/agent_workflow.md)**
+- **[System Architecture Diagram](docs/architecture_diagram.md)**
+- **[Detailed Tech Stack & Libraries](docs/TECH_STACK.md)**
+- **[Setup & Installation Guide](docs/SETUP_GUIDE.md)**
 
 ---
 
-### Team
-
+### Team & Development
 Meet the core team and see how to get involved by visiting our **[Contributors Guide](docs/CONTRIBUTORS.md)**.
