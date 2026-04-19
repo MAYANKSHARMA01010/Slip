@@ -32,7 +32,7 @@ warnings.filterwarnings("ignore")
 
 # ── Page config ────────────────────────────────────────────────────────────────
 st.set_page_config(
-    page_title="Dropout — Telco Churn Intelligence",
+    page_title="Slip — Telco Churn Intelligence",
     page_icon="📡",
     layout="wide",
     initial_sidebar_state="expanded",
@@ -290,7 +290,7 @@ def is_valid_email(email: str) -> bool:
 
 pipeline, feature_columns = load_artifacts()
 df = load_data()
-console.print(Panel("[bold green]Dropout Dashboard loaded[/bold green]", title="[cyan]startup[/cyan]"))
+console.print(Panel("[bold green]Slip Dashboard loaded[/bold green]", title="[cyan]startup[/cyan]"))
 
 # ══════════════════════════════════════════════════════════════════════════════
 #  HOME PAGE
@@ -299,7 +299,7 @@ def render_home_page():
     st.markdown("""
     <div class="hero-shell">
         <div class="hero-nav">
-            <div class="hero-brand">Drop<span>out</span></div>
+            <div class="hero-brand">Sli<span>p</span></div>
             <div class="hero-nav-links">
                 <span>Overview</span><span>Predict</span><span>AI Strategist</span><span>Docs</span>
             </div>
@@ -385,7 +385,7 @@ with st.sidebar:
     st.markdown("""
     <div style="padding:0.8rem 0 1.2rem; border-bottom:1px solid #1e2d45; margin-bottom:1rem;">
         <div style="font-size:1.25rem;font-weight:800;color:#f8fafc;letter-spacing:-0.02em;">
-            Drop<span style="color:#38bdf8;">out</span>
+            Sli<span style="color:#38bdf8;">p</span>
         </div>
         <div style="color:#475569;font-size:0.8rem;margin-top:0.2rem;">Telco Churn Intelligence</div>
     </div>
