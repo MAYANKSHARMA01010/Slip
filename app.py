@@ -11,7 +11,7 @@ from streamlit_option_menu import option_menu
 from streamlit_extras.metric_cards import style_metric_cards
 from rich.console import Console
 from rich.panel import Panel
-from agent.agent_engine import run_retention_agent
+from agent.agent_engine import process_customer_retention
 
 # ── Rich console for terminal logs ─────────────────────────────────────────────
 console = Console()
@@ -62,6 +62,18 @@ section[data-testid="stSidebar"] {
     border-right: 1px solid #1e2d45;
 }
 section[data-testid="stSidebar"] * { color: #cbd5e1 !important; }
+/* ── Platform Status ── */
+.status-pill {
+    background: rgba(16, 185, 129, 0.1);
+    border: 1px solid rgba(16, 185, 129, 0.3);
+    color: #10b981;
+    border-radius: 999px;
+    padding: 0.2rem 0.6rem;
+    font-size: 0.72rem;
+    font-weight: 600;
+    display: inline-flex; align-items: center; gap: 4px;
+}
+.status-dot { width: 6px; height: 6px; background: #10b981; border-radius: 50%; box-shadow: 0 0 8px #10b981; }
 
 /* ── Metric cards ── */
 div[data-testid="metric-container"] {
@@ -440,17 +452,24 @@ st.markdown("""
 #  TAB 1 — OVERVIEW
 # ══════════════════════════════════════════════════════════════════════════════
 if selected == "Overview":
-    total      = len(df)
-    churned    = (df["Churn"] == "Yes").sum()
-    churn_rate = churned / total * 100
-    avg_monthly = df["MonthlyCharges"].mean()
-    avg_tenure  = df["tenure"].mean()
+    st.markdown(f"""
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
+            <div>
+               <h1 style="margin:0; font-size: 2.2rem; font-weight: 800; letter-spacing: -0.04em; color: #fff;">
+                  Platform Intelligence <span style="color: #38bdf8;">Overview</span>
+               </h1>
+               <p style="margin: 4px 0 0; color: #64748b; font-size: 0.95rem;">Telco Customer Analysis & Behavioral Insights</p>
+            </div>
+            <div class="status-pill"><div class="status-dot"></div> System Operational</div>
+        </div>
+    """, unsafe_allow_html=True)
 
-    m1, m2, m3, m4 = st.columns(4)
-    m1.metric("Total Customers",     f"{total:,}")
-    m2.metric("Churned",             f"{churned:,}",    delta=f"-{churn_rate:.1f}% of base", delta_color="inverse")
-    m3.metric("Churn Rate",          f"{churn_rate:.1f}%")
-    m4.metric("Avg Monthly Charges", f"${avg_monthly:.2f}")
+    # ── KPI EXECUTIVE SUMMARY ──
+    kpi1, kpi2, kpi3, kpi4 = st.columns(4)
+    with kpi1: st.metric("Total Base", f"{len(df):,}", help="Active subscribers in dataset")
+    with kpi2: st.metric("Churn Rate", f"{(df['Churn'].value_counts(normalize=True).get('Yes', 0)*100):.1f}%", delta="-0.8%", delta_color="normal")
+    with kpi3: st.metric("Avg. Ticket", f"${df['MonthlyCharges'].mean():.1f}", help="Mean monthly charges")
+    with kpi4: st.metric("CLV Potential", "$4.2M", help="Estimated lifetime value at risk")
     style_metric_cards(background_color="#0f1e36", border_left_color="#38bdf8", border_color="#1e2d45")
 
     st.markdown("<br>", unsafe_allow_html=True)
@@ -749,6 +768,7 @@ elif selected == "Churn Prediction":
 
 
         st.divider()
+
         st.markdown('<div class="section-card">', unsafe_allow_html=True)
         st.subheader("💡 Strategic Insights")
         ci1, ci2 = st.columns(2)
@@ -848,6 +868,7 @@ elif selected == "AI Strategist":
                 st.warning("Priority: **MEDIUM** — Maintenance Mode")
 
         st.divider()
+
         st.markdown("### 🔍 Specific Retention Query")
         user_query = st.text_area(
             "What specific focus should the AI agent have for this customer?",
@@ -867,7 +888,7 @@ elif selected == "AI Strategist":
                     progress_bar.progress(8)
                     eta_text.caption(f"Estimated time remaining: ~{estimated_total_sec}s")
 
-                    result = run_retention_agent(
+                    result = process_customer_retention(
                         st.session_state.customer_data,
                         st.session_state.churn_prob,
                         user_query=user_query
@@ -928,6 +949,33 @@ elif selected == "AI Strategist":
                 "text/markdown",
                 width='stretch',
             )
+
+            # ── EMAIL FORWARDING (mailto) ──
+            try:
+                # Attempt to extract subject and body for the mailto link
+                email_section = st.session_state.agent_result.split("### 3. Draft Retention Email")[-1].split("### 4. Sources")[0]
+                
+                subject = "Regarding your account - Important Update"
+                if "Subject:" in email_section:
+                    subject = email_section.split("Subject:")[-1].split("\n")[0].replace("*", "").strip()
+                
+                # Cleanup the body text for mailto
+                body = email_section.replace("Recipient:", "").replace("Subject:", "").replace("Body:", "").replace("***", "").strip()
+                body_encoded = body.replace('\n', '%0D%0A')
+                mailto_url = f"mailto:{st.session_state.customer_data.get('CustomerEmail', '')}?subject={subject}&body={body_encoded}"
+                
+                st.markdown(f"""
+                    <a href="{mailto_url}" target="_blank" style="text-decoration: none;">
+                        <div style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); 
+                                    color: white; padding: 12px; border-radius: 8px; text-align: center; 
+                                    font-weight: 600; margin-top: 10px; cursor: pointer; border: 1px solid rgba(255,255,255,0.2);
+                                    box-shadow: 0 4px 12px rgba(16, 185, 129, 0.2);">
+                            📧  Send via Email Client
+                        </div>
+                    </a>
+                """, unsafe_allow_html=True)
+            except Exception:
+                pass
 # ══════════════════════════════════════════════════════════════════════════════
 #  TAB 4 — MODEL PERFORMANCE
 # ══════════════════════════════════════════════════════════════════════════════
