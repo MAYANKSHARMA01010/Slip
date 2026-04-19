@@ -555,9 +555,15 @@ elif selected == "Churn Prediction":
     with st.form("prediction_form"):
         st.markdown("##### Contact Details")
         i1, i2, i3 = st.columns(3)
-        with i1: customer_name  = st.text_input("Customer Name", value="")
-        with i2: customer_email = st.text_input("Customer Email", value="", placeholder="name@example.com")
-        with i3: company_name   = st.text_input("Company Name",  value="Telco")
+        with i1:
+            with st.container(border=True):
+                customer_name = st.text_input("Customer Name", value="")
+        with i2:
+            with st.container(border=True):
+                customer_email = st.text_input("Customer Email", value="", placeholder="name@example.com")
+        with i3:
+            with st.container(border=True):
+                company_name = st.text_input("Company Name", value="Telco")
 
         col1, col2, col3 = st.columns(3)
         with col1:
