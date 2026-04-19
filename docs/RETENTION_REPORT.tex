@@ -1,0 +1,354 @@
+\documentclass[11pt,a4paper]{article}
+
+% --- Packages ---
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[margin=1in]{geometry}
+\usepackage{hyperref}
+\usepackage{booktabs}
+\usepackage{longtable}
+\usepackage{tabularx}
+\usepackage{xcolor}
+\usepackage{enumitem}
+\usepackage{sectsty}
+\usepackage{amssymb}
+\usepackage{amsmath}
+\usepackage{graphicx}
+\usepackage{listings}
+\usepackage{tcolorbox}
+
+% --- Branding & Colors ---
+\definecolor{primary}{HTML}{2E5077}
+\definecolor{secondary}{HTML}{4DA1A9}
+\definecolor{accent}{HTML}{79D7BE}
+\definecolor{background}{HTML}{F6F4F0}
+
+\sectionfont{\color{primary}}
+\subsectionfont{\color{secondary}}
+
+\hypersetup{
+    colorlinks=true,
+    linkcolor=primary,
+    filecolor=secondary,
+    urlcolor=primary,
+}
+
+% --- Custom Commands ---
+\newcommand{\risk}[1]{\textbf{\textcolor{red}{#1}}}
+\newcommand{\success}[1]{\textbf{\textcolor{green!50!black}{#1}}}
+
+% --- Title Information ---
+\title{\Huge \textbf{Slip} \\ \Large Structured Retention Intelligence Report}
+\author{\textbf{Team:} Mayank Sharma · Aman Soni · Ankit Kumar Pandey \\ \textbf{Project:} Customer Churn Prediction \& Agentic Retention Strategy}
+\date{April 19, 2026}
+
+\begin{document}
+
+\maketitle
+
+\begin{tcolorbox}[colback=background, colframe=primary, title=Report Metadata]
+\textbf{Report Type:} Structured Retention Analysis \\
+\textbf{Dataset:} IBM Telco Customer Churn Dataset \\
+\textbf{Generated:} April 19, 2026
+\end{tcolorbox}
+
+\newpage
+
+\tableofcontents
+
+\newpage
+
+% --- Section 1: Executive Summary ---
+\section{Executive Summary}
+
+This report presents a comprehensive retention intelligence analysis produced by the \textbf{Slip} platform — a production-grade, AI-powered churn management system built for telecom operators. The system integrates classical Machine Learning, a LangGraph-based multi-step AI agent, and Retrieval-Augmented Generation (RAG) to move beyond simple churn prediction and deliver \textbf{actionable, personalised intervention strategies}.
+
+\subsection{Key Findings at a Glance}
+
+\begin{table}[h!]
+\centering
+\begin{tabularx}{\textwidth}{l X}
+\toprule
+\textbf{Metric} & \textbf{Value} \\
+\midrule
+Total Customers Analysed & \textbf{7,043} \\
+Overall Churn Rate & \textbf{26.5\%} \\
+Customers at Churn Risk & \textbf{1,869} \\
+Highest-Risk Segment (Contract) & Month-to-Month: \risk{42.7\%} churn rate \\
+Highest-Risk Service (Internet) & Fiber Optic: \risk{41.9\%} churn rate \\
+Highest-Risk Payment Method & Electronic Check: \risk{45.3\%} churn rate \\
+Highest-Risk Tenure Bucket & 0–12 months: \risk{47.4\%} churn rate \\
+ML Model (Best) & Random Forest — \success{84.2\%} CV Accuracy \\
+Estimated Revenue at Risk & $\sim$\textbf{\$139,175 / month} \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\subsection{Critical Insight}
+
+\begin{quote}
+The data reveals a convergence pattern: \textbf{month-to-month Fiber Optic customers who pay via electronic check and have less than 12 months of tenure} represent the single highest-risk cohort. These customers carry 4–6$\times$ the average churn rate and must be the primary target for Tier 1 intervention.
+\end{quote}
+
+\hr
+
+% --- Section 2: Dataset Overview ---
+\section{Dataset Overview}
+
+The analysis is built on the \textbf{IBM Telco Customer Churn dataset}, a real-world-like dataset simulating a US telecom company's subscriber base.
+
+\subsection{Dataset Composition}
+
+\begin{table}[h!]
+\centering
+\begin{tabularx}{\textwidth}{l X}
+\toprule
+\textbf{Attribute} & \textbf{Detail} \\
+\midrule
+\textbf{Source} & IBM Telco Customer Churn (Kaggle) \\
+\textbf{Total Records} & 7,043 customers \\
+\textbf{Total Features} & 20 predictive features + 1 target label \\
+\textbf{Target Variable} & \texttt{Churn} (Yes / No) \\
+\textbf{Class Distribution} & 73.5\% Retained · 26.5\% Churned \\
+\textbf{Class Imbalance} & $\sim$2.77:1 (Retained : Churned) \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\subsection{High-Level Statistics}
+
+\begin{table}[h!]
+\centering
+\begin{tabularx}{\textwidth}{l l l r}
+\toprule
+\textbf{Metric} & \textbf{Retained} & \textbf{Churned} & \textbf{$\Delta$ Delta} \\
+\midrule
+\textbf{Customers} & 5,174 (73.5\%) & 1,869 (26.5\%) & --- \\
+\textbf{Avg Tenure} & 37.6 months & 18.0 months & \risk{$-$19.6 months} \\
+\textbf{Median Tenure} & 38 months & 10 months & \risk{$-$28 months} \\
+\textbf{Avg Monthly Charges} & \$61.27 & \$74.44 & \risk{+\$13.17} \\
+\textbf{Avg Total Charges} & \$2,549.91 & \$1,531.80 & \risk{$-$1,018.11} \\
+\textbf{Median Total Charges} & \$1,679.52 & \$703.55 & \risk{$-$975.97} \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\begin{quote}
+\textbf{Key Observation:} Churned customers pay \textit{more per month} but have been subscribed for \textit{less time} — indicating price sensitivity and early dissatisfaction, not low-value customers.
+\end{quote}
+
+\newpage
+
+% --- Section 3: Churn Risk Landscape ---
+\section{Churn Risk Landscape}
+
+\subsection{Contract Type Analysis}
+Contract type is the \textbf{single strongest predictor of churn} in this dataset.
+
+\begin{table}[h!]
+\centering
+\begin{tabularx}{\textwidth}{l l l l}
+\toprule
+\textbf{Contract Type} & \textbf{Retained} & \textbf{Churned} & \textbf{Churn Rate} \\
+\midrule
+Month-to-Month & 2,220 & 1,655 & \risk{42.7\%} (High) \\
+One Year & 1,307 & 166 & 11.3\% (Medium) \\
+Two Year & 1,647 & 48 & 2.8\% (Low) \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\textbf{Analysis:}
+\begin{itemize}
+    \item Month-to-month contracts carry a churn rate \textbf{15$\times$ higher} than two-year contracts.
+    \item Nearly \textbf{88.5\% of all churned customers} are on month-to-month contracts.
+\end{itemize}
+
+\subsection{Internet Service Analysis}
+
+\begin{table}[h!]
+\centering
+\begin{tabularx}{\textwidth}{l l l l}
+\toprule
+\textbf{Internet Service} & \textbf{Retained} & \textbf{Churned} & \textbf{Churn Rate} \\
+\midrule
+DSL & 1,962 & 459 & 19.0\% (Medium) \\
+Fiber Optic & 1,799 & 1,297 & \risk{41.9\%} (High) \\
+No Internet & 1,413 & 113 & 7.4\% (Low) \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\subsection{Payment Method Analysis}
+
+\begin{table}[h!]
+\centering
+\begin{tabularx}{\textwidth}{l l l l}
+\toprule
+\textbf{Payment Method} & \textbf{Retained} & \textbf{Churned} & \textbf{Churn Rate} \\
+\midrule
+Electronic Check & 1,294 & 1,071 & \risk{45.3\%} (High) \\
+Mailed Check & 1,304 & 308 & 19.1\% (Medium) \\
+Bank Transfer (Auto) & 1,286 & 258 & 16.7\% (Medium) \\
+Credit Card (Auto) & 1,290 & 232 & 15.2\% (Low) \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\newpage
+
+% --- Section 4: Financial Impact Assessment ---
+\section{Financial Impact Assessment}
+
+\subsection{Monthly Revenue at Risk}
+Using average monthly charges of \textbf{\$74.44} for churned customers:
+\begin{lstlisting}[basicstyle=\ttfamily]
+Revenue at Risk = 1,869 churned customers x $74.44 avg monthly charge
+               = $139,168 / month
+               = $1.67 million / year
+\end{lstlisting}
+
+\subsection{Revenue Recovery Potential by Scenario}
+
+\begin{longtable}{l l l}
+\toprule
+\textbf{Intervention} & \textbf{Churn Reduction} & \textbf{Monthly Revenue Saved} \\
+\midrule
+Convert 15\% of M-t-M to 1-yr contract & $\sim$248 fewer churns & $\sim$\$18,460 / mo \\
+Migrate 20\% of E-Check payers to Auto-Pay & $\sim$214 fewer churns & $\sim$\$15,930 / mo \\
+Add Tech Support to 10\% of no-TS customers & $\sim$145 fewer churns & $\sim$\$10,793 / mo \\
+\midrule
+\textbf{Combined Portfolio Impact} & \textbf{$\sim$711 fewer churns} & \textbf{$\sim$\$52,924 / mo} \\
+\bottomrule
+\end{longtable}
+
+% --- Section 5: ML Model Performance ---
+\section{ML Model Performance}
+
+\subsection{Model Evaluation Leaderboard}
+
+\begin{table}[h!]
+\centering
+\begin{tabular}{c l c c}
+\toprule
+\textbf{Rank} & \textbf{Model} & \textbf{Cross-Val Accuracy} & \textbf{Selected?} \\
+\midrule
+1st & \textbf{Random Forest} & \textbf{84.2\%} & Yes \\
+2nd & XGBoost & 83.8\% & No \\
+3rd & Decision Tree & 78.7\% & No \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Selected Model: Random Forest Classifier}
+
+\begin{table}[h!]
+\centering
+\begin{tabularx}{\textwidth}{l X}
+\toprule
+\textbf{Metric} & \textbf{Value} \\
+\midrule
+Model Type & Random Forest Classifier \\
+Precision (Churn class) & 54.0\% \\
+Recall (Churn class) & 58.0\% \\
+F1 Score (Churn class) & 56.0\% \\
+Training Samples & $\sim$5,600 (post-SMOTE) \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\newpage
+
+% --- Section 6: Agentic AI Retention System ---
+\section{Agentic AI Retention System}
+
+The \textbf{Slip} platform implements a two-milestone architecture using a LangGraph-based multi-agent system.
+
+\subsection{LangGraph Agent Workflow}
+\begin{itemize}
+    \item \textbf{Analyze Node:} Identifies top 2–3 risk factors via LLM reasoning.
+    \item \textbf{Retrieve Node:} Queries FAISS vector store for matching strategies (RAG).
+    \item \textbf{Generate Node:} Synthesizes a full retention plan and personalized email.
+\end{itemize}
+
+\subsection{LLM Provider Fallback Chain}
+
+\begin{table}[h!]
+\centering
+\begin{tabular}{l l l l}
+\toprule
+\textbf{Priority} & \textbf{Provider} & \textbf{Model} & \textbf{Trigger} \\
+\midrule
+1st & Google Gemini & \texttt{gemini-flash-latest} & Primary \\
+2nd & Groq (Llama 3) & \texttt{llama-3.3-70b-versatile} & Gemini quota exceeded \\
+3rd & Mistral AI & \texttt{mistral-large-latest} & Groq unavailable \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+% --- Section 7: Structured Retention Playbook ---
+\section{Structured Retention Playbook}
+
+\subsection{Priority Tier 1 — Critical Intervention (Churn Risk > 70\%)}
+\textbf{Immediate Actions (within 48 hours):}
+\begin{itemize}[label=$\square$]
+    \item \textbf{Personal outreach call} from a senior retention specialist.
+    \item \textbf{Offer a 15–20\% loyalty discount} for switching to a 1-year contract.
+    \item \textbf{3-month complimentary Tech Support} included in the package.
+    \item \textbf{Auto-Pay enrollment incentive}: \$5/month credit.
+\end{itemize}
+
+\newpage
+
+% --- Section 8: Segment-Specific Strategy Matrix ---
+\section{Segment-Specific Strategy Matrix}
+
+\begin{longtable}{l c p{3cm} p{4cm}}
+\toprule
+\textbf{Segment} & \textbf{Churn Rate} & \textbf{Risk Factor} & \textbf{Intervention} \\
+\midrule
+M-t-M + Fiber + E-Check & $\sim$70\%+ & Triple convergence & Personal call + 20\% discount + TS bundle \\
+Senior Citizens & 41.7\% & Accessibility & Tech Concierge programme \\
+First-Year customers & 47.4\% & Early dissatisfaction & 6-month milestone reward \\
+No Tech Support & 41.6\% & Lack of value & 3-month free Tech Support offer \\
+\bottomrule
+\end{longtable}
+
+% --- Section 9: Key Performance Indicators ---
+\section{Key Performance Indicators (KPIs)}
+
+\begin{table}[h!]
+\centering
+\begin{tabularx}{\textwidth}{l c c c}
+\toprule
+\textbf{KPI} & \textbf{Baseline} & \textbf{Target (6m)} & \textbf{Target (12m)} \\
+\midrule
+Overall Churn Rate & 26.5\% & < 22\% & < 18\% \\
+M-t-M Churn Rate & 42.7\% & < 35\% & < 28\% \\
+Auto-Pay Adoption & $\sim$45\% & > 55\% & > 65\% \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+% --- Section 10: Implementation Roadmap ---
+\section{Implementation Roadmap}
+
+\begin{itemize}
+    \item[\checkmark] \textbf{Phase 1: Foundation} — COMPLETE (ML Models, Streamlit UI, LangGraph Agent).
+    \item[$\square$] \textbf{Phase 2: Enhancement} — In Progress (Batch Prediction, A/B Testing).
+    \item[$\square$] \textbf{Phase 3: Deployment} — Planned (Public Space, API Layer, Alerts).
+\end{itemize}
+
+% --- Section 11: Conclusion & Recommendations ---
+\section{Conclusion \& Recommendations}
+
+The \textbf{Slip} platform demonstrates that modern churn management requires a complete system of \textit{prediction}, \textit{reasoning}, and \textit{personalised intervention}.
+
+\textbf{Top Recommendations:}
+\begin{enumerate}
+    \item \textbf{Contract Migration Programme:} Target M-t-M customers with 15\% upgrade discounts.
+    \item \textbf{Auto-Pay Incentive:} \$5/month credit for automatic payments.
+    \item \textbf{Tech Concierge:} Dedicated support for senior citizens and at-risk segments.
+\end{enumerate}
+
+\end{document}
