@@ -13,7 +13,7 @@ load_dotenv()
 class AgentState(TypedDict):
     customer_data: dict
     churn_probability: float
-    user_query: str  # Added for Milestone 2 alignment
+    user_query: str
     retrieved_strategies: str
     analysis: str
     final_report: str
@@ -36,7 +36,6 @@ def get_llm_response(prompt: str, log: List[str], state: AgentState):
         api_key = os.getenv(provider["env_key"])
         if api_key and api_key != "your_api_key_here":
             try:
-                # Initialize LLM based on provider class
                 if provider["name"] == "Google Gemini":
                     llm = provider["class"](model=provider["model"], google_api_key=api_key)
                 else:
@@ -45,7 +44,6 @@ def get_llm_response(prompt: str, log: List[str], state: AgentState):
                 log.append(f"🚀 Using {provider['name']} for generation...")
                 response = llm.invoke(prompt)
                 
-                # Extract content
                 if hasattr(response, "content"):
                     if isinstance(response.content, list):
                         content = "".join([b.get("text", "") for b in response.content if isinstance(b, dict)])
@@ -99,7 +97,6 @@ def retrieve_knowledge(state: AgentState):
     
     docs = db.similarity_search(query, k=3)
     
-    # Extract content and metadata (including sources for alignment)
     strategies = []
     for i, doc in enumerate(docs):
         strategies.append(f"Source {i+1}: {doc.page_content}")
@@ -137,17 +134,14 @@ def generate_report(state: AgentState):
     RETENTION PLAYBOOK EXCERPTS (WITH SOURCES):
     {state['retrieved_strategies']}
     
-    YOUR OUTPUT MUST INCLUDE THE FOLLOWING SECTIONS IN ORDER:
-    1. Executive Risk Summary (Professional tone).
-    2. Actionable Intervention Plan (Bullet points, tailored to analysis).
-    3. Draft Retention Email (Personalized, empathetic).
-    4. Sources & References (List the sources cited in the playbook excerpts).
-    5. Business & Ethical Disclaimer (Mandatory: explain that AI-generated suggestions should be reviewed by a human professional).
+    YOUR OUTPUT MUST INCLUDE THE FOLLOWING SECTIONS IN ORDER WITH THESE EXACT HEADERS:
+    ### 1. Executive Risk Summary
+    ### 2. Actionable Intervention Plan
+    ### 3. Draft Retention Email (Include 'Recipient:', 'Subject:', and 'Body:' inside this section)
+    ### 4. Sources & References
+    ### 5. Business & Ethical Disclaimer
 
-    IMPORTANT EMAIL REQUIREMENTS:
-    - Use the exact customer name and company name provided above.
-    - Include the customer email in a short line like "To: ..." before the subject.
-    - Do not use placeholders such as [Customer Name], [Company Name], etc.
+    IMPORTANT: Do not use placeholders like [Customer Name]. Use real names provided.
     """
     
     log = state.get('thought_log', [])
@@ -156,69 +150,47 @@ def generate_report(state: AgentState):
     final_report, provider = get_llm_response(prompt, log, state)
     
     if not final_report:
-        # --- Heuristic Fallback Content ---
         heuristic_report = f"""
 **1. Executive Risk Summary**
-The customer is at risk due to their **{state['customer_data']['Contract']}** contract and **{state['customer_data']['InternetService']}** service. With a churn probability of **{state['churn_probability']:.1f}%**, immediate intervention is recommended to secure long-term value.
+High risk detected for {customer_name} due to contract type and service charges.
 
 **2. Actionable Intervention Plan**
-*   **Contract Migration**: Propose a targeted discount (10-20%) to move the customer from month-to-month to a secured 1-year or 2-year plan.
-*   **Service Optimization**: Since the customer uses **{state['customer_data']['InternetService']}**, ensure they are aware of all features and provide a complimentary service check.
-*   **Loyalty Engagement**: Schedule a proactive touchpoint to address any latent dissatisfaction before it leads to churn.
+* Migrate to a long-term contract.
+* Offer a connectivity health check.
 
 **3. Draft Retention Email**
-To: {customer_email}
-Subject: We value your partnership - let's find your perfect plan
-
-Dear {customer_name},
-
-As a valued member of {company_name}, we noticed you've been with us for {state['customer_data']['tenure']} months, and we want to ensure you're getting the best experience possible. We've reviewed your current service profile and would like to offer you an exclusive loyalty discount on our annual secured plans.
-
-This upgrade would provide you with both price stability and enhanced support features. Are you available for a brief call this week to discuss how we can better serve you?
-
-Best regards,
-Retention Team
-{company_name}
+Sent to: {customer_email}
+Subject: Enhancing your experience at {company_name}
 
 **4. Sources & References**
-*   *Retention Playbook v2.1*: Strategy for high-risk contract migration segments.
-*   *Internal Knowledge Base*: Multi-channel engagement protocols for Fiber Optic customers.
+Internal Playbook v2.1
 
 **5. Business & Ethical Disclaimer**
-*Disclaimer: This retention plan is generated by an AI assistant for guidance purposes. All suggestions and email templates should be reviewed by a qualified customer success professional to ensure accuracy and compliance with company policy.*
+AI-generated. Review by professional required.
 """
-        final_report = f"> 💡 **Safe Mode Active**: All AI providers reached quota limits. Using expert heuristics.\n\n" + heuristic_report
+        final_report = f"> 💡 **Expert Heuristics**: Using strategic fallback logic.\n\n" + heuristic_report
         log.append("💡 Switched to Heuristic Mode for final report.")
 
-    if final_report:
-        final_report = (
-            final_report
-            .replace("[Customer Name]", customer_name)
-            .replace("[Company Name]", company_name)
-            .replace("[Your Name]", "Retention Team")
-            .replace("[Link: Secure My Savings]", "Please reply to this email to activate your offer.")
-        )
-    
     return {"final_report": final_report, "active_provider": provider, "thought_log": log}
 
 # --- Graph Construction ---
 
 def create_agent():
     workflow = StateGraph(AgentState)
-    
     workflow.add_node("analyze", analyze_customer)
     workflow.add_node("retrieve", retrieve_knowledge)
     workflow.add_node("generate", generate_report)
-    
     workflow.set_entry_point("analyze")
     workflow.add_edge("analyze", "retrieve")
     workflow.add_edge("retrieve", "generate")
     workflow.add_edge("generate", END)
-    
     return workflow.compile()
 
 # --- Execution Entry ---
-def run_retention_agent(customer_data: dict, churn_prob: float, user_query: str = ""):
+def process_customer_retention(customer_data: dict, churn_prob: float, user_query: str = ""):
+    """
+    Final entry point name to break all cached module links.
+    """
     agent = create_agent()
     initial_state = {
         "customer_data": customer_data,
