@@ -5,10 +5,10 @@ import os
 sys.path.append(os.getcwd())
 
 try:
-    from agent.agent_engine import run_retention_agent
+    from agent.agent_engine import process_customer_retention
     import inspect
     
-    sig = inspect.signature(run_retention_agent)
+    sig = inspect.signature(process_customer_retention)
     print(f"Function signature: {sig}")
     
     if 'user_query' in sig.parameters:
