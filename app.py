@@ -104,12 +104,19 @@ div.stButton > button:hover {
 
 /* ── Section cards ── */
 .section-card {
-    background: #0f1e36;
-    border: 1px solid #1e2d45;
-    border-radius: 16px;
-    padding: 1.4rem 1.6rem;
-    margin-bottom: 1.2rem;
-    box-shadow: 0 6px 24px rgba(0,0,0,0.25);
+    background: rgba(15, 30, 54, 0.65);
+    backdrop-filter: blur(16px);
+    border: 1px solid rgba(56, 189, 248, 0.1);
+    border-radius: 18px;
+    padding: 1.8rem 2rem;
+    margin-bottom: 1.5rem;
+    box-shadow: 0 10px 35px rgba(0,0,0,0.4);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.section-card:hover {
+    border-color: rgba(56, 189, 248, 0.3);
+    transform: translateY(-2px);
+    box-shadow: 0 15px 45px rgba(0,0,0,0.5);
 }
 
 /* ── Hero shell ── */
@@ -225,16 +232,19 @@ _DEFAULT_MARGIN = dict(l=16, r=16, t=32, b=16)
 
 def apply_layout(fig, height=None, margin=None, xaxis=None, yaxis=None, **extra):
     """Apply PLOTLY_LAYOUT + per-chart overrides without duplicate-key errors."""
-    overrides = dict(
-        height=height,
-        margin=margin or _DEFAULT_MARGIN,
-        xaxis={**_AXIS_STYLE, **(xaxis or {})},
-        yaxis={**_AXIS_STYLE, **(yaxis or {})},
-        **extra,
-    )
-    if height is None:
-        overrides.pop("height")
-    fig.update_layout(**PLOTLY_LAYOUT, **overrides)
+    layout_params = {**PLOTLY_LAYOUT}
+    
+    if height: 
+        layout_params["height"] = height
+        
+    layout_params["margin"] = margin or _DEFAULT_MARGIN
+    layout_params["xaxis"]  = {**_AXIS_STYLE, **(xaxis or {})}
+    layout_params["yaxis"]  = {**_AXIS_STYLE, **(yaxis or {})}
+    
+    # Merge any extra layout properties (e.g., custom font, barmode)
+    layout_params.update(extra)
+    
+    fig.update_layout(**layout_params)
     return fig
 
 BLUE  = "#38bdf8"
@@ -549,50 +559,70 @@ if selected == "Overview":
 #  TAB 2 — CHURN PREDICTION
 # ══════════════════════════════════════════════════════════════════════════════
 elif selected == "Churn Prediction":
-    st.subheader("Predict Customer Churn")
-    st.caption("Fill in the customer profile and run inference to estimate churn probability.")
-
-    with st.form("prediction_form"):
-        st.markdown("##### Contact Details")
-        i1, i2, i3 = st.columns(3)
-        with i1: customer_name  = st.text_input("Customer Name", value="")
-        with i2: customer_email = st.text_input("Customer Email", value="", placeholder="name@example.com")
-        with i3: company_name   = st.text_input("Company Name",  value="Telco")
-
-        col1, col2, col3 = st.columns(3)
-        with col1:
-            st.markdown("##### Account Info")
-            tenure          = st.number_input("Tenure (months)", min_value=0, max_value=120, value=12)
-            contract        = st.selectbox("Contract", ["Month-to-month", "One year", "Two year"])
-            payment_method  = st.selectbox("Payment Method", [
+    st.markdown('<div class="section-card">', unsafe_allow_html=True)
+    st.markdown("### 📋 Customer Profile Intelligence")
+    st.caption("Enter the customer details below to calculate churn probability and generate retention strategies.")
+    
+    with st.form("prediction_form", border=False):
+        # ── CONTACT & BASICS ──
+        st.markdown("#### 👤 Step 1: Identity & Basics")
+        c_i1, c_i2, c_i3 = st.columns([1, 1.2, 1])
+        with c_i1: customer_name  = st.text_input("Full Name", value="", placeholder="e.g. John Doe")
+        with c_i2: customer_email = st.text_input("Email Address", value="", placeholder="john.doe@example.com")
+        with c_i3: company_name   = st.text_input("Organization",  value="", placeholder="e.g. Acme Corp")
+        
+        st.markdown("<br>", unsafe_allow_html=True)
+        
+        # ── ACCOUNT & SUBSCRIPTION ──
+        st.markdown("#### 💳 Step 2: Account & Subscription")
+        a1, a2, a3 = st.columns(3)
+        with a1:
+            tenure            = st.number_input("Tenure (Months)", min_value=0, max_value=120, value=12, help="How long as a customer")
+            contract          = st.selectbox("Contract Type", ["Month-to-month", "One year", "Two year"])
+        with a2:
+            monthly_charges   = st.number_input("Monthly Charges ($)", 0.0, 200.0, 65.0, 0.5)
+            paperless_billing = st.selectbox("Paperless Billing", ["Yes", "No"])
+        with a3:
+            total_charges     = st.number_input("Total Charges ($)", 0.0, 10000.0, 780.0, 1.0)
+            payment_method    = st.selectbox("Payment Method", [
                 "Electronic check", "Mailed check",
                 "Bank transfer (automatic)", "Credit card (automatic)",
             ])
-            paperless_billing = st.selectbox("Paperless Billing", ["Yes", "No"])
-            monthly_charges   = st.number_input("Monthly Charges ($)", 0.0, 200.0, 65.0, 0.5)
-            total_charges     = st.number_input("Total Charges ($)",   0.0, 10000.0, 780.0, 1.0)
 
-        with col2:
-            st.markdown("##### Demographics")
+        st.markdown("<br>", unsafe_allow_html=True)
+        
+        # ── DEMOGRAPHICS & SERVICES ──
+        st.markdown("#### 🛠️ Step 3: Service & Technical Profile")
+        
+        d1, d2 = st.columns(2)
+        with d1:
             gender         = st.selectbox("Gender", ["Male", "Female"])
             senior_citizen = st.selectbox("Senior Citizen", ["No", "Yes"])
-            partner        = st.selectbox("Partner", ["Yes", "No"])
-            dependents     = st.selectbox("Dependents", ["Yes", "No"])
-            st.markdown("##### Phone")
-            phone_service  = st.selectbox("Phone Service", ["Yes", "No"])
-            multiple_lines = st.selectbox("Multiple Lines", ["No", "Yes", "No phone service"])
+        with d2:
+            partner        = st.selectbox("Has Partner?", ["Yes", "No"])
+            dependents     = st.selectbox("Has Dependents?", ["Yes", "No"])
+            
+        with st.expander("🌐 Advanced Service Details", expanded=False):
+            st.caption("Toggle these settings for specific service configurations.")
+            s1, s2, s3 = st.columns(3)
+            with s1:
+                phone_service  = st.selectbox("Phone Service", ["Yes", "No"])
+                multiple_lines = st.selectbox("Multiple Lines", ["No", "Yes", "No phone service"])
+                internet_service = st.selectbox("Internet Service", ["DSL", "Fiber optic", "No"])
+            with s2:
+                online_security   = st.selectbox("Online Security", ["No", "Yes", "No internet service"])
+                online_backup     = st.selectbox("Online Backup", ["No", "Yes", "No internet service"])
+                device_protection = st.selectbox("Device Protection", ["No", "Yes", "No internet service"])
+            with s3:
+                tech_support      = st.selectbox("Tech Support", ["No", "Yes", "No internet service"])
+                streaming_tv      = st.selectbox("Streaming TV", ["No", "Yes", "No internet service"])
+                streaming_movies  = st.selectbox("Streaming Movies", ["No", "Yes", "No internet service"])
 
-        with col3:
-            st.markdown("##### Internet Services")
-            internet_service  = st.selectbox("Internet Service", ["DSL", "Fiber optic", "No"])
-            online_security   = st.selectbox("Online Security",   ["No", "Yes", "No internet service"])
-            online_backup     = st.selectbox("Online Backup",     ["No", "Yes", "No internet service"])
-            device_protection = st.selectbox("Device Protection", ["No", "Yes", "No internet service"])
-            tech_support      = st.selectbox("Tech Support",      ["No", "Yes", "No internet service"])
-            streaming_tv      = st.selectbox("Streaming TV",      ["No", "Yes", "No internet service"])
-            streaming_movies  = st.selectbox("Streaming Movies",  ["No", "Yes", "No internet service"])
+        st.markdown("<br>", unsafe_allow_html=True)
+        submitted = st.form_submit_button("🚀 Run Churn Analysis", width='stretch', use_container_width=True)
+    st.markdown('</div>', unsafe_allow_html=True)
 
-        submitted = st.form_submit_button("🔍  Predict Churn", width='stretch')
+
 
     if submitted and not is_valid_email(customer_email):
         st.error("Please enter a valid email address before running prediction.")
@@ -640,81 +670,128 @@ elif selected == "Churn Prediction":
         ))
         st.toast("Prediction generated ✅")
 
-        st.divider()
-        st.subheader("Prediction Result")
+        st.markdown('<div class="section-card">', unsafe_allow_html=True)
+        st.subheader("🎯 Analytical Verdict")
+        
+        # ── PREMIUM RISK CARD ──
+        status_color = "#f43f5e" if prediction == 1 else "#10b981"
+        status_bg    = "rgba(244, 63, 94, 0.08)" if prediction == 1 else "rgba(16, 185, 129, 0.08)"
+        status_icon  = "⚠️" if prediction == 1 else "✅"
+        status_label = "CRITICAL CHURN RISK" if prediction == 1 else "LOYAL CUSTOMER PROFILE"
+        
+        st.markdown(f"""
+        <div style="background: {status_bg}; 
+                    border: 1px solid {status_color}44; 
+                    border-radius: 24px; 
+                    padding: 40px 30px; 
+                    text-align: center; 
+                    margin-bottom: 30px;
+                    box-shadow: inset 0 0 30px {status_color}11;">
+            <div style="font-size: 4.5rem; margin-bottom: 15px; filter: drop-shadow(0 0 10px {status_color}44);">{status_icon}</div>
+            <div style="color: {status_color}; font-weight: 800; font-size: 1.4rem; letter-spacing: 0.15em; margin-bottom: 8px; text-transform: uppercase;">
+                {status_label}
+            </div>
+            <div style="color: #94a3b8; font-size: 1rem; margin-bottom: 25px;">
+                Customer Identity: <span style="color: #fff; font-weight: 600;">{customer_name or "Anonymous"}</span>
+            </div>
+            <div style="display: flex; justify-content: center; align-items: baseline; gap: 8px;">
+                <span style="font-size: 4.5rem; font-weight: 900; color: #fff; line-height: 1;">{churn_prob:.1f}</span>
+                <span style="font-size: 1.8rem; font-weight: 700; color: {status_color};">%</span>
+            </div>
+            <div style="color: #64748b; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.05em; font-weight: 600;">
+                Calculated Churn Probability Score
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
 
-        r1, r2, r3 = st.columns([1, 1.8, 1])
 
-        with r1:
-            if prediction == 1:
-                st.error(f"⚠️  High Churn Risk\n\n**{churn_prob:.1f}%** probability")
-            else:
-                st.success(f"✅  Likely to Stay\n\n**{stay_prob:.1f}%** probability")
 
-        with r2:
+
+        col_gau, col_bar = st.columns([1, 1])
+        
+        with col_gau:
             # Gauge chart
             gauge_color = ORG if churn_prob > 50 else BLUE
             fig = go.Figure(go.Indicator(
                 mode="gauge+number",
                 value=churn_prob,
-                number={"suffix": "%", "font": {"size": 28, "color": gauge_color}},
+                number={"suffix": "%", "font": {"size": 32, "color": gauge_color}},
                 gauge={
                     "axis": {"range": [0, 100], "tickcolor": "#475569", "tickfont": {"size": 11}},
-                    "bar":  {"color": gauge_color, "thickness": 0.25},
+                    "bar":  {"color": gauge_color, "thickness": 0.3},
                     "bgcolor": "#0a1628",
                     "bordercolor": "#1e2d45",
                     "steps": [
-                        {"range": [0,   40], "color": "#0a2a1a"},
-                        {"range": [40,  65], "color": "#2a1f0a"},
-                        {"range": [65, 100], "color": "#2a0e0e"},
+                        {"range": [0,   30], "color": "rgba(16, 185, 129, 0.1)"},
+                        {"range": [30,  70], "color": "rgba(251, 191, 36, 0.1)"},
+                        {"range": [70, 100], "color": "rgba(244, 63, 94, 0.1)"},
                     ],
-                    "threshold": {"line": {"color": gauge_color, "width": 3}, "value": churn_prob},
                 },
-                title={"text": "Churn Probability", "font": {"size": 14, "color": "#94a3b8"}},
             ))
-            apply_layout(fig, height=240, margin=dict(l=16, r=16, t=40, b=0))
-            st.plotly_chart(fig, width='stretch')
+            apply_layout(fig, height=260, margin=dict(l=30, r=30, t=50, b=10))
+            st.plotly_chart(fig, use_container_width=True)
 
-        with r3:
-            st.markdown("<br><br>", unsafe_allow_html=True)
+        with col_bar:
             # Horizontal prob bar
             fig2 = go.Figure(go.Bar(
-                x=[stay_prob, churn_prob], y=["Stays", "Churns"],
+                x=[stay_prob, churn_prob], y=["Retention", "Risk"],
                 orientation="h",
-                marker_color=[BLUE, ORG],
+                marker_color=["#10b981", "#f43f5e"],
                 text=[f"{stay_prob:.1f}%", f"{churn_prob:.1f}%"],
-                textposition="outside",
-                textfont=dict(color="#e2e8f0", size=13),
+                textposition="inside",
+                textfont=dict(color="#fff", size=14, family="Inter"),
+                hoverinfo="none"
             ))
-            apply_layout(fig2, height=200, xaxis=dict(range=[0, 120]))
-            st.plotly_chart(fig2, width='stretch')
+            apply_layout(fig2, height=260, xaxis=dict(showgrid=False, zeroline=False, range=[0, 100], showticklabels=False),
+                         yaxis=dict(showgrid=False, zeroline=False))
+            st.plotly_chart(fig2, use_container_width=True)
+        st.markdown('</div>', unsafe_allow_html=True)
+
 
         st.divider()
-        st.subheader("Customer Insights & Recommendations")
+        st.markdown('<div class="section-card">', unsafe_allow_html=True)
+        st.subheader("💡 Strategic Insights")
         ci1, ci2 = st.columns(2)
 
         with ci1:
-            st.markdown("##### Key Risk Factors")
+            st.markdown("##### 🚩 Top Risk Drivers")
             factors = []
-            if contract        == "Month-to-month": factors.append("**Month-to-month contract** — highest churn segment.")
-            if internet_service == "Fiber optic":   factors.append("**Fiber optic** — above-average churn rate.")
-            if tech_support    == "No":             factors.append("**No Tech Support** — strong churn predictor.")
-            if tenure          < 12:                factors.append("**Low tenure (<1 yr)** — critical risk window.")
+            if contract        == "Month-to-month": factors.append("Month-to-month contract (High churn segment)")
+            if internet_service == "Fiber optic":   factors.append("Fiber optic service (Quality/Price sensitivity)")
+            if tech_support    == "No":             factors.append("Lack of Tech Support (Key retention barrier)")
+            if tenure          < 12:                factors.append("Low tenure (<1 yr) (Early lifecycle churn)")
+            
             if not factors:
-                st.success("No major churn risk factors detected in this profile.")
+                st.success("No critical risk drivers detected for this profile.")
             else:
                 for f in factors:
-                    st.markdown(f"- {f}")
+                    st.markdown(f"""
+                        <div style="background: rgba(244, 63, 94, 0.15); border-left: 3px solid #f43f5e; 
+                                    padding: 8px 15px; border-radius: 4px; margin-bottom: 8px; font-size: 0.9rem;">
+                            {f}
+                        </div>
+                    """, unsafe_allow_html=True)
 
         with ci2:
-            st.markdown("##### Recommended Actions")
+            st.markdown("##### 🛡️ Recommended Mitigation")
+            recs = []
             if prediction == 1:
-                st.markdown("- 💰 **Offer 10–20% discount** to switch to a 1-year contract.")
-                if tech_support    == "No":           st.markdown("- 🛠  **3 months free Tech Support** — add significant perceived value.")
-                if internet_service == "Fiber optic": st.markdown("- 📞 **Proactive service call** to address fiber network satisfaction.")
+                recs.append("Offer 10–20% 'Upgrade Reward' discount")
+                if tech_support    == "No":           recs.append("Grant 3 months complimentary Tech Support")
+                if internet_service == "Fiber optic": recs.append("Schedule proactive connectivity health check")
             else:
-                st.markdown("- 🎁 **Upsell opportunity** — offer hardware upgrades or add-on streaming.")
-                st.markdown("- 🙏 **Referral bonus** — send loyalty reward email.")
+                recs.append("Incentivize long-term loyalty with referral bonus")
+                recs.append("Upsell hardware or high-tier streaming bundle")
+
+            for r in recs:
+                st.markdown(f"""
+                    <div style="background: rgba(16, 185, 129, 0.15); border-left: 3px solid #10b981; 
+                                padding: 8px 15px; border-radius: 4px; margin-bottom: 8px; font-size: 0.9rem;">
+                        {r}
+                    </div>
+                """, unsafe_allow_html=True)
+        st.markdown('</div>', unsafe_allow_html=True)
+
 
         st.markdown("<br>", unsafe_allow_html=True)
         st.subheader("Customer vs Average Metrics")
@@ -730,7 +807,7 @@ elif selected == "Churn Prediction":
                               marker_color="#1e293b",
                               text=[f"{v:,.1f}" for v in avg_vals], textposition="outside"))
         apply_layout(fig3, height=320, barmode="group", bargap=0.3,
-                     textfont=dict(color="#e2e8f0", size=12))
+                     font=dict(color="#e2e8f0", size=12))
         st.plotly_chart(fig3, width='stretch')
 
         st.divider()
