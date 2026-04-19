@@ -1,4 +1,4 @@
-# Customer Churn Prediction & Agentic Retention Strategy
+# Slip — Churn Intelligence Platform
 
 ## From Predictive Analytics to Intelligent Intervention
 

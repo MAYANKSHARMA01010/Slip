@@ -442,7 +442,7 @@ st.markdown("""
 <div class="app-header">
     <div class="app-header-icon">📡</div>
     <div>
-        <h1 class="app-title">Dropout — Churn Command Center</h1>
+        <h1 class="app-title">Slip — Churn Command Center</h1>
         <p class="app-subtitle">Monitor churn signals · Predict risk · Generate AI-powered retention actions</p>
     </div>
 </div>
@@ -941,7 +941,7 @@ elif selected == "AI Strategist":
 
             st.markdown(st.session_state.agent_result)
 
-            report_text = f"DROPOUT — TELCO CHURN STRATEGY REPORT\n\n{st.session_state.agent_result}"
+            report_text = f"SLIP — TELCO CHURN STRATEGY REPORT\n\n{st.session_state.agent_result}"
             st.download_button(
                 "📥  Download Full Retention Report",
                 report_text,

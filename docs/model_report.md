@@ -1,7 +1,7 @@
 # Model Performance Evaluation Report
 
 ## 1. Executive Summary
-The "Dropout" predictive model is based on a **Random Forest Classifier**, which achieved the highest cross-validation performance among evaluated candidates. The model is designed to prioritize the identification of churners while maintaining a low false-positive rate to optimize retention spending.
+The "Slip" predictive model is based on a **Random Forest Classifier**, which achieved the highest cross-validation performance among evaluated candidates. 
 
 ## 2. Core Evaluation Metrics
 Evaluation conducted on a 20% hold-out test set:

@@ -3,27 +3,16 @@
 ## 1. Problem Statement
 In the highly competitive telecommunications industry, customer retention is as critical as acquisition. **Customer Churn**—the loss of subscribers to competitors—directly impacts revenue stability and long-term growth. Increasing the retention rate by even 5% can lead to a profit increase of 25% to 95%.
 
-The primary challenge for **Dropout Telco** is identifying at-risk customers *before* they leave and providing them with personalized, high-value incentives to stay.
+The **Slip** platform is designed for the modern Telecommunications sector, where user acquisition costs are high and loyalty is the primary driver of sustainable revenue.
 
-## 2. Business Impact
-- **Revenue Loss**: Every churning customer represents a loss in Monthly Recurring Revenue (MRR).
-- **High CAC**: The Cost of Acquisition (CAC) for a new customer is often 5x to 25x higher than the cost of retaining an existing one.
-- **Brand Erosion**: High churn rates often signal underlying service issues or poor market positioning.
+The primary challenge for **Slip Telco** is identifying at-risk customers *before* they leave and providing them with personalized, high-value incentives to stay.
 
-## 3. The "Dropout" Solution
-Our platform addresses this problem through a two-milestone approach:
+## 2. Solution Overview: Slip
+**Slip** (Predictive Loyalty & Intervention) is an AI-powered intelligence platform that transforms raw data into actionable retention strategies. It utilizes two distinct layers:
+1.  **Predictive Layer**: A machine learning model that flags high-risk behavioral patterns.
+2.  **Agentic Layer**: A reasoning agent (LangGraph) that queries internal retention playbooks (RAG) to generate intervention plans.
 
-### Milestone 1: Predictive Analytics
-Using historical behavioral and transactional data, we built a production-grade Machine Learning pipeline that predicts the **Probability of Churn** for every customer profile. This allows the business to transition from "Reactive" to "Proactive" churn management.
-
-### Milestone 2: Agentic Retention Strategy
-Moving beyond simple predictions, we integrated a **LangGraph-powered AI Strategist**. This agent:
-1.  **Reasons** about the specific risk factors of an individual customer.
-2.  **Retrieves** proven retention playbooks from a curated RAG knowledge base.
-3.  **Plans** a personalized intervention (e.g., specific discounts, service upgrades).
-4.  **Drafts** empathetic, personalized communication templates for immediate deployment.
-
-## 4. Key Success Metrics
-- **Model Accuracy**: >80% for reliable risk detection.
-- **Intervention Speed**: Real-time generation of retention plans.
-- **Personalization**: Unique strategies tailored to tenure, contract type, and service usage.
+## 3. Business Goals
+- **Reduce Churn Rate**: Target at-risk customers with scientific precision.
+- **Optimize Retention Spend**: Focus discounts and incentives only on those likely to leave.
+- **Automate Expertise**: Empower customer support teams with AI-generated, expert-vetted scripts and action plans.

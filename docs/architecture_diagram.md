@@ -1,6 +1,6 @@
-# System Architecture Diagram
+# Slip — Architecture & Agent Workflow
 
-The **Dropout Intelligence Platform** follows a progressive AI architecture, evolving from a classical machine learning pipeline into a multi-agentic reasoning system.
+The **Slip Intelligence Platform** follows a progressive AI architecture, evolving from a classical machine learning pipeline into a multi-agentic reasoning system.
 
 ```mermaid
 graph TD
