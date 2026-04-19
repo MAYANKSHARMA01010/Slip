@@ -371,9 +371,9 @@ with st.sidebar:
 
     selected = option_menu(
         menu_title=None,
-        options=["Overview", "Churn Prediction", "AI Strategist"],
-        icons=["bar-chart-fill", "cpu-fill", "robot"],
-        default_index=["Overview", "Churn Prediction", "AI Strategist"].index(
+        options=["Overview", "Churn Prediction", "AI Strategist", "Model Performance"],
+        icons=["bar-chart-fill", "cpu-fill", "robot", "activity"],
+        default_index=["Overview", "Churn Prediction", "AI Strategist", "Model Performance"].index(
             st.session_state.active_tab
         ),
         styles={
@@ -537,8 +537,8 @@ if selected == "Overview":
         text=corr_df.values.round(2), texttemplate="%{text}",
         hovertemplate="%{x} × %{y}: %{z}<extra></extra>",
     ))
-    apply_layout(fig, height=280)
-    st.plotly_chart(fig, width='stretch')
+    apply_layout(fig, height=450, margin=dict(l=50, r=50, t=50, b=50))
+    st.plotly_chart(fig, use_container_width=True)
     st.markdown('</div>', unsafe_allow_html=True)
 
     st.divider()
@@ -843,3 +843,163 @@ elif selected == "AI Strategist":
                 "text/markdown",
                 width='stretch',
             )
+# ══════════════════════════════════════════════════════════════════════════════
+#  TAB 4 — MODEL PERFORMANCE
+# ══════════════════════════════════════════════════════════════════════════════
+elif selected == "Model Performance":
+    st.subheader("Model Performance & Diagnostics")
+    st.caption("Detailed view of the trained Machine Learning pipeline and its evaluation metrics.")
+
+    # ── Performance Metrics ──
+    m1, m2, m3, m4 = st.columns(4)
+    m1.metric("Model Accuracy", "77.2%", help="Overall percentage of correct predictions")
+    m2.metric("Precision (Churn)", "54.0%", help="How many selected as 'Churn' were actually 'Churn'")
+    m3.metric("Recall (Churn)", "58.0%", help="How many actual 'Churn' cases were correctly identified")
+    m4.metric("F1 Score (Churn)", "56.0%", help="Harmonic mean of Precision and Recall")
+    style_metric_cards(background_color="#0f1e36", border_left_color="#a78bfa", border_color="#1e2d45")
+
+    st.markdown("<br>", unsafe_allow_html=True)
+
+    # ── Model Benchmarking Leaderboard ──
+    st.markdown('<div class="section-card">', unsafe_allow_html=True)
+    st.subheader("Model Benchmarking Leaderboard")
+    st.caption("Comparison of the top 3 models evaluated during the model selection phase.")
+    
+    col_bench1, col_bench2 = st.columns([1.5, 1])
+    
+    with col_bench1:
+        # Leaderboard Chart
+        bench_data = pd.DataFrame({
+            "Model": ["Random Forest", "XGBoost", "Decision Tree"],
+            "Accuracy": [0.842, 0.838, 0.787],
+            "Rank": ["Gold", "Silver", "Bronze"]
+        })
+        
+        fig_bench = px.bar(bench_data, x="Accuracy", y="Model", orientation="h",
+                          text=bench_data["Accuracy"].apply(lambda x: f"{x*100:.1f}%"),
+                          color="Model",
+                          color_discrete_map={
+                              "Random Forest": "#fbbf24", # Gold
+                              "XGBoost": "#94a3b8",      # Silver
+                              "Decision Tree": "#92400e" # Bronze
+                          },
+                          template="plotly_dark")
+        
+        apply_layout(fig_bench, height=300, showlegend=False)
+        fig_bench.update_traces(textposition='inside', marker_line_width=0)
+        st.plotly_chart(fig_bench, use_container_width=True)
+        
+    with col_bench2:
+        # Winner Card
+        st.markdown(f"""
+        <div style="background: linear-gradient(135deg, rgba(251, 191, 36, 0.1) 0%, rgba(10, 22, 40, 0.1) 100%); 
+                    border: 1px solid rgba(251, 191, 36, 0.3); padding: 25px; border-radius: 12px; height: 100%;
+                    box-shadow: 0 4px 15px rgba(0,0,0,0.3);">
+            <h3 style="color: #fbbf24; margin-top: 0; display: flex; align-items: center; gap: 10px;">
+                <span>🏆</span> The Winner
+            </h3>
+            <h4 style="margin: 15px 0 10px 0; color: #fff;">Random Forest Classifier</h4>
+            <p style="font-size: 0.95rem; color: #94a3b8; line-height: 1.5;">
+                Chosen as the best model with a <b>84.2%</b> cross-validation accuracy. 
+                It demonstrates the best balance between precision and recall for churn detection.
+            </p>
+            <div style="background: rgba(251, 191, 36, 0.2); color: #fbbf24; padding: 6px 12px; 
+                        border-radius: 20px; display: inline-block; font-size: 0.8rem; font-weight: bold; margin-top: 10px;">
+                BEST PERFORMANCE
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
+    st.markdown('</div>', unsafe_allow_html=True)
+
+    st.markdown("<br>", unsafe_allow_html=True)
+
+    c1, c2 = st.columns([1, 1.2])
+
+    with c1:
+        st.markdown('<div class="section-card">', unsafe_allow_html=True)
+        st.subheader("Confusion Matrix")
+        # Fixed data from churn.ipynb evaluation on test set
+        z = [[882, 171], [149, 203]]
+        x = ["Predicted: No", "Predicted: Yes"]
+        y = ["Actual: No", "Actual: Yes"]
+        
+        fig = ff_fig = go.Figure(data=go.Heatmap(
+            z=z, x=x, y=y,
+            colorscale=[[0, "#0a1628"], [0.5, "#1d4ed8"], [1, "#38bdf8"]],
+            text=[[str(v) for v in row] for row in z],
+            texttemplate="%{text}",
+            hovertemplate="<b>%{y}</b><br>%{x}<br>Count: %{z}<extra></extra>",
+            showscale=False
+        ))
+        apply_layout(fig, height=350, margin=dict(l=40, r=40, t=40, b=40))
+        st.plotly_chart(fig, width='stretch')
+        st.markdown('</div>', unsafe_allow_html=True)
+
+    with c2:
+        st.markdown('<div class="section-card">', unsafe_allow_html=True)
+        st.subheader("Feature Importance")
+        
+        # Extract features from the pipeline
+        try:
+            # The model is part of an imblearn/sklearn pipeline
+            preprocessor = pipeline.named_steps.get('preprocessor')
+            classifier = pipeline.named_steps.get('classifier', pipeline)
+            
+            if hasattr(classifier, 'feature_importances_'):
+                importances = classifier.feature_importances_
+                
+                # Get names from preprocessor if available, otherwise fallback
+                if preprocessor and hasattr(preprocessor, 'get_feature_names_out'):
+                    names = preprocessor.get_feature_names_out()
+                else:
+                    names = feature_columns
+                
+                if len(names) == len(importances):
+                    feat_df = pd.DataFrame({
+                        "Feature": names,
+                        "Importance": importances
+                    }).sort_values(by="Importance", ascending=True).tail(12)
+                    
+                    # Clean up feature names for better readability
+                    feat_df["Feature"] = feat_df["Feature"].str.replace(r'^(cat|num)__', '', regex=True)
+                    
+                    fig = px.bar(feat_df, x="Importance", y="Feature", orientation="h",
+                                 color="Importance", color_continuous_scale="Blues",
+                                 template="plotly_dark")
+                    apply_layout(fig, height=350, showlegend=False, coloraxis_showscale=False)
+                    fig.update_traces(marker_line_width=0)
+                    st.plotly_chart(fig, width='stretch')
+                else:
+                    st.error(f"Mismatch: {len(names)} features vs {len(importances)} importances.")
+            else:
+                st.info("Feature importance not available for this model type.")
+        except Exception as e:
+            st.error(f"Error extracting feature importance: {e}")
+        st.markdown('</div>', unsafe_allow_html=True)
+
+    # ── Model Config Card ──
+    st.markdown('<div class="section-card">', unsafe_allow_html=True)
+    st.subheader("Model Configuration")
+    
+    col_a, col_b = st.columns(2)
+    with col_a:
+        st.markdown("##### Pipeline Architecture")
+        st.code("""
+Pipeline(steps=[
+    ('classifier', RandomForestClassifier(
+        random_state=42, 
+        n_estimators=100
+    ))
+])
+        """, language="python")
+
+    with col_b:
+        st.markdown("##### Training Summary")
+        st.markdown(f"""
+        - **Model Type:** Random Forest Classifier
+        - **Total Training Samples:** ~5,600 (with SMOTE)
+        - **Test Samples:** 1,405
+        - **Input Features:** {len(feature_columns)}
+        - **Data Prep:** Label Encoding + SMOTE Oversampling
+        """)
+    st.markdown('</div>', unsafe_allow_html=True)
