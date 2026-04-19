@@ -1,33 +1,34 @@
-# Slip — Architecture & Agent Workflow
+# System Architecture Overview
 
-The **Slip Intelligence Platform** follows a progressive AI architecture, evolving from a classical machine learning pipeline into a multi-agentic reasoning system.
+The **Slip Intelligence Platform** is designed with a progressive AI architecture. It seamlessly transitions from a classical machine learning core into a sophisticated, multi-agentic reasoning system.
+
+## The Slip Blueprint
 
 ```mermaid
 graph TD
     A[Customer Data] --> B[Streamlit Dashboard]
-    B --> C{Action}
+    B --> C{User Intent}
     
-    subgraph "Milestone 1: Predictive Core"
-        C -->|Inference| D[Random Forest Pipeline]
-        D --> E[Churn Probability %]
-        D --> F[Feature Importance]
+    subgraph "The Predictive Core (Milestone 1)"
+        C -->|Analyze| D[Random Forest Pipeline]
+        D --> E[Churn Risk Score]
+        D --> F[Risk Driving Factors]
     end
     
-    subgraph "Milestone 2: Agentic Layer"
+    subgraph "The Agentic Strategist (Milestone 2)"
         E --> G[LangGraph Agent]
-        H[(FAISS Vector DB)] -->|Retrieval| G
-        G --> I[LLM Analysis & Reasoning]
-        I --> J[Structured Retention Report]
+        H[(FAISS Vector DB)] -->|Knowledge Retrieval| G
+        G --> I[LLM Reasoning Chain]
+        I --> J[Structured Retention Plan]
     end
     
-    J --> K[Retention Email & Plan]
+    J --> K[Final Intervention Output]
     K --> B
 ```
 
-### Technical components:
-- **UI Framework**: Streamlit
-- **ML Core**: Scikit-learn (Random Forest Pipeline)
-- **Agentic Framework**: LangGraph (Stateful Workflows)
-- **Vector DB**: FAISS (Local storage of strategy playbooks)
-- **Embedding Model**: `sentence-transformers/all-MiniLM-L6-v2`
-- **LLM Reasoning**: Google Gemini Flash (with Groq/Mistral fallbacks)
+### Core Technologies
+- **UI & UX**: Built with **Streamlit** for a responsive, interactive data experience.
+- **Machine Learning**: Powered by a **Scikit-learn** Random Forest pipeline, optimized for high precision in churn detection.
+- **Agentic Logic**: Orchestrated via **LangGraph**, enabling stateful, deterministic workflows that bridge data and strategy.
+- **Knowledge Retrieval**: Utilizes a local **FAISS** vector database to store and retrieve industry-standard retention playbooks.
+- **Natural Language Reasoning**: Primarily uses **Google Gemini Flash**, with integrated fallbacks to **Groq (Llama 3)** and **Mistral** to ensure 100% uptime.

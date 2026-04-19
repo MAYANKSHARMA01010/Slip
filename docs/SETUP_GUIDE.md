@@ -1,93 +1,74 @@
-# How to Run the Telco Churn Dashboard
+# Setup & Installation Guide
 
-This guide will walk you through cloning the repository, setting up your environment, and running the Streamlit dashboard locally.
+This guide will help you get the **Slip Intelligence Platform** up and running on your local machine in just a few minutes.
 
 ## 🚀 Quick Start (macOS/Linux)
 
-Copy and paste these commands in order to get the project running in seconds:
+If you're already familiar with Python environments, run these commands to launch the dashboard:
 
 ```bash
-# 1. Create a virtual environment
-python3 -m venv .venv
+# 1. Prepare your environment
+python3 -m venv .venv && source .venv/bin/activate
 
-# 2. Activate the environment
-source .venv/bin/activate
-
-# 3. Install all dependencies
+# 2. Synchronize libraries
 pip install -r requirements.txt
 
-# 4. Launch the dashboard
+# 3. Launch Slip
 streamlit run app.py
 ```
 
 ---
 
-## Detailed Installation Steps
+## Detailed Walkthrough
 
-## Prerequisites
+### Prerequisites
+Before you begin, ensure you have the following installed:
+- **Python 3.9+** (Check with `python3 --version`)
+- **Git** (Check with `git --version`)
+- **API Keys**: To use the "AI Strategist" features, you'll need a **Google Gemini**, **Groq**, or **Mistral** API key in your `.env` file.
 
-- **Python 3.9+** installed on your system.
-- **Git** installed on your system.
-
-## Step 1: Clone the Repository
-
-Open your terminal and run the following command to clone the project:
+### Step 1: Clone the Project
+Open your terminal and clone the repository to your local workspace:
 
 ```bash
-git clone https://github.com/MAYANKSHARMA01010/Slip
+git clone https://github.com/Amansoni045/GEN_AI_MID_TERM.git
+cd Slip
 ```
 
-Navigate into the project directory:
+### Step 2: Initialize the Virtual Environment
+We recommend using a virtual environment to keep your global Python installation clean.
 
 ```bash
-cd GEN_AI_MID_TERM
-```
-
-## Step 2: Set Up a Virtual Environment
-
-It's highly recommended to use a virtual environment to manage project dependencies.
-
-Create a virtual environment named `.venv`:
-
-```bash
+# Create the environment
 python3 -m venv .venv
+
+# Activate it (macOS/Linux)
+source .venv/bin/activate
+
+# Activate it (Windows)
+.venv\Scripts\activate
 ```
 
-Activate the virtual environment:
-
-- **On macOS/Linux:**
-
-  ```bash
-  source .venv/bin/activate
-  ```
-
-- **On Windows:**
-
-  ```bash
-  .venv\Scripts\activate
-  ```
-
-## Step 3: Install Dependencies
-
-With your virtual environment active, install the required Python packages using `pip`:
+### Step 3: Install Required Dependencies
+Slip relies on several modern libraries for ML and Agentic logic. Install them all at once:
 
 ```bash
 pip install -r requirements.txt
 ```
 
-*Note: Depending on your system and Python setup, you might need to use `pip3` instead of `pip`.*
-
-## Step 4: Run the Application
-
-Now you are ready to launch the Streamlit dashboard! Run the following command:
+### Step 4: Launch the Platform
+You're ready! Start the Streamlit server with one command:
 
 ```bash
 streamlit run app.py
 ```
 
-The application will automatically train the model (if no saved model artifacts are found) and then launch the dashboard in your default web browser at `http://localhost:8501`.
+The platform will automatically detect if your model artifacts need training, build them if necessary, and then open the dashboard in your default browser (usually at `http://localhost:8501`).
 
-## What's Next?
+---
 
-- Explore the **Data Overview** tab to see visual distributions of the dataset.
-- Navigate to the **Predict Churn** tab to enter custom user data and see real-time churn predictions with actionable insights.
+## Exploring the Platform
+- **Phase 1: Overview**: Dive into the high-level metrics and churn trends of the Telco base.
+- **Phase 2: Prediction**: Input a specific customer profile to see an instant, data-driven risk verdict.
+- **Phase 3: AI Strategist**: Let the AI agent reason through the risk and generate a professional retention plan.
+- **Phase 4: Performance**: Inspect the statistical health and configuration of the underlying ML models.

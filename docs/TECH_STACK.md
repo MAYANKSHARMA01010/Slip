@@ -1,113 +1,62 @@
 # Technology Stack & Libraries
 
-This project uses a carefully selected stack of modern Python libraries to handle everything from data processing to deploying our machine learning models via an interactive web interface.
-
-Here is a breakdown of the core libraries we rely on, why we chose them, and what they do in the context of this project.
+**Slip** is built on a modern Python stack designed for high-performance machine learning and agentic AI. Here is a breakdown of our core technologies, why we chose them, and their role in the platform.
 
 ---
 
-## Frontend & UI
-
+## UI & Application Framework
 **[Streamlit](https://streamlit.io/)**
-
-- **What it is:** An open-source Python framework for building custom web apps for machine learning and data science.
-- **Why we use it:** It allows us to build a highly polished, interactive web dashboard entirely in Python without needing to manage separate frontend code (like HTML/JS/CSS). It drastically reduces the time to prototype and deploy our models.
-- **How it's used:** It powers `app.py`, creating the "Data Overview" and "Predict Churn" tabs, managing user inputs globally, and natively rendering matplotlib charts and UI elements.
+- **Role**: Powers the `app.py` dashboard, including the "Overview," "Churn Prediction," and "AI Strategist" phases.
+- **Why**: It allows us to build a premium, interactive web interface entirely in Python, strictly focusing on data logic and UX without the overhead of a separate frontend stack.
 
 ---
 
-## Data Handling & Preprocessing
-
-**[Pandas](https://pandas.pydata.org/)**
-
-- **What it is:** A powerful data manipulation and analysis library.
-- **Why we use it:** It provides fast, flexible, and expressive data structures (DataFrames) designed to make working with tabular data easy and intuitive.
-- **How it's used:** We use pandas to load our CSV dataset, handle missing values (like coercing empty strings to NaNs), map human-readable outputs to binary columns, and pass the data between the Streamlit UI and our models.
-
-**[NumPy](https://numpy.org/)**
-
-- **What it is:** The fundamental package for scientific computing with Python.
-- **Why we use it:** It adds support for large, multi-dimensional arrays and matrices, along with a large collection of high-level mathematical functions to operate on these arrays.
-- **How it's used:** Often used behind the scenes by pandas and scikit-learn. We also use it for numerical operations and array reshaping when converting isolated user inputs into inference-ready matrices.
-
----
-
-## Machine Learning & Modeling
-
+## Machine Learning Core
 **[Scikit-Learn](https://scikit-learn.org/)**
-
-- **What it is:** A robust machine learning library for Python.
-- **How it's used:** We use it extensively to build our core `Pipeline`. It handles data scaling (`StandardScaler`), categorical encoding (`OneHotEncoder`), and ultimately trains our primary classifiers. We also heavily rely on its `metrics` module for model evaluation (accuracy, precision, recall, f1, confusion matrix).
+- **Role**: Manages the data preprocessing (`StandardScaler`, `OneHotEncoder`) and our primary **Random Forest** classification pipeline.
+- **Why**: Industry-standard reliability and a mature ecosystem for model evaluation and validation.
 
 **[Imbalanced-Learn (imblearn)](https://imbalanced-learn.org/)**
+- **Role**: Addresses the distribution skew in the Telco dataset using **SMOTE** (Synthetic Minority Over-sampling Technique).
+- **Why**: Ensures the model learns the true patterns of churning customers rather than simply optimizing for the majority class.
 
-- **What it is:** A python library relying on scikit-learn that tackles the problem of imbalanced datasets.
-- **Why we use it:** Our dataset is skewed (there are far more non-churners than churners). Without correction, a model might "cheat" and simply predict "No Churn" every time to achieve high accuracy.
-- **How it's used:** We use its `SMOTE` (Synthetic Minority Over-sampling Technique) implementation to synthetically generate new examples of the minority class (churners) during training, forcing the model to learn the true underlying patterns rather than the class imbalance.
+---
 
-**[Random Forest & Decision Tree]**
+## Agentic AI Layer (Milestone 2)
+**[LangGraph](https://langchain-ai.github.io/langgraph/)**
+- **Role**: Orchestrates the "Agentic Strategist" workflow. It manages the stateful transitions between analysis, retrieval, and generation.
+- **Why**: Provides the flexibility of a cyclic graph, allowing for sophisticated multi-step reasoning that traditional linear chains cannot achieve.
 
-- **What they are:** Tree-based ensemble and rule-based classification algorithms.
-- **Why we use them:** They are highly interpretable, handle non-linear data well, and Random Forest provides excellent robustness against overfitting.
-- **How they are used:** We trained a `DecisionTreeClassifier` and a `RandomForestClassifier` (which ultimately became our final chosen model) during the evaluation phase to compare performance.
+**[FAISS](https://github.com/facebookresearch/faiss)**
+- **Role**: A high-performance vector database that stores our retention playbooks.
+- **Why**: Enables instantaneous similarity searches, allowing the agent to retrieve the most relevant business logic for any customer profile.
+
+---
+
+## Data & Serialization
+**[Pandas](https://pandas.pydata.org/) & [NumPy](https://numpy.org/)**
+- **Role**: The backbone of our data management. Pandas handles the tabular CSV records, while NumPy performs the efficient matrix operations required for inference.
 
 **[Joblib](https://joblib.readthedocs.io/)**
-
-- **What it is:** A set of tools to provide lightweight pipelining in Python, specialized for fast disk I/O.
-- **Why we use it:** Training machine learning models takes time. It's much faster to train the model once, save it to disk, and just load the pre-trained model when the app boots up.
-- **How it's used:** We use `joblib.dump` to serialize our trained `Pipeline` and encoders to disk as `.pkl` files, and `joblib.load` within the Streamlit UI to deserialize them for instant inference.
+- **Role**: Serializes our trained `Pipeline` and model artifacts into `.pkl` files.
+- **Why**: Ensures the dashboard loads instantly by utilizing pre-trained intelligence instead of re-training on every boot.
 
 ---
 
-## Visualization
-
-**[Matplotlib](https://matplotlib.org/) & [Seaborn](https://seaborn.pydata.org/)**
-
-- **What they are:** Matplotlib is a comprehensive library for creating static, animated, and interactive visualizations. Seaborn is a data visualization library based on matplotlib that provides a high-level interface for drawing attractive statistical graphics.
-- **Why we use them:** They provide immense granular control over visual output, allowing us to build highly customized charts that perfectly integrate into our premium dark theme UI.
-- **How they are used:** We use matplotlib to generate the core layouts and bar/pie charts inside the Streamlit dashboard app natively. We use Seaborn within our jupyter notebooks for exploratory data analysis (EDA) and to visualize complex output matrices like the final test-set confusion matrix.
-
----
-
-## Core Project Files
-
-To tie all these technologies together, the project is structured around three main foundational files:
-
-**`churn.ipynb`**
-
-- **Details:** This Jupyter Notebook is where all the initial Exploratory Data Analysis (EDA) happens. It contains the code for cleaning the data, analyzing correlations, handling the dataset imbalance via SMOTE, and training/evaluating the actual Decision Tree, Random Forest, and XGBoost classifiers. It is the "sandbox" where the data science work is verified before being exported for production.
-
-**`app.py`**
-
-- **Purpose:** The Production Application Interface.
-- **Details:** This is the main python script that runs the Streamlit web server. It contains the logic for rendering the UI, the custom CSS for the dark theme, and the functions that load the pre-trained `Pipeline` to execute real-time churn predictions based on user inputs.
-
-**`requirements.txt`**
-
-- **Purpose:** The Dependency Manager.
-- **Details:** A standardized text file documenting every external library (and its version constraints, if applicable) required to run this project. Running `pip install -r requirements.txt` reads this file and exactly replicates the technology stack environment on any new machine.
-
----
-
-## Project Structure
-
-Here is a quick overview of the entire repository structure, so you know exactly where to find what you're looking for:
-
+## Final Project Structure
 ```text
 .
-├── docs/                    # Official documentation
-│   ├── CONTRIBUTORS.md      # Team members and contribution guidelines
-│   ├── SCRIPTV1.md          # Video presentation script
-│   ├── SETUP_GUIDE.md       # Step-by-step instructions to clone and run the app
-│   └── TECH_STACK.md        # You are here! Details on weapons of choice
-├── Project 5_AI_ML.pdf      # Detailed university project report and presentation
-├── README.md                # Main entry point with project overview and goals
-├── app.py                   # The Streamlit web dashboard source code
-├── churn.ipynb              # The Jupyter notebook for EDA and model training
-├── customer_churn_model.pkl # Best trained model saved to disk
-├── encoders.pkl             # Serialized OneHotEncoders for robust categorical preprocessing
-├── feature_columns.pkl      # Expected dataframe columns for consistent model inference
-├── model_pipeline.pkl       # Full scikit-learn preprocessing and modeling pipeline
-├── requirements.txt         # Required Python library dependencies
-└── telco_customer_churn.csv # The raw dataset used for training
+├── agent/                   # Agentic AI logic (LangGraph nodes & RAG utils)
+├── docs/                    # Human-centered project documentation
+│   ├── PRESENTATION_GUIDE.md # Script & mapping for the Milestone 2 video
+│   ├── SETUP_GUIDE.md        # How to clone and run Slip locally
+│   ├── agent_workflow.md     # Detailed guide to the LangGraph DAG
+│   └── architecture_diagram.md # High-level system blueprint
+├── knowledge_base/          # Markdown retention playbooks for RAG
+├── vectorstore/             # Pre-built FAISS vector index
+├── app.py                   # Main Streamlit dashboard source code
+├── churn.ipynb              # Training notebook & exploratory analysis
+├── model_pipeline.pkl       # Serialized ML intelligence
+├── requirements.txt         # Project dependencies
+└── telco_customer_churn.csv # Core customer dataset (7,000+ records)
 ```
