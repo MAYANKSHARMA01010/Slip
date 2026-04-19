@@ -17,3 +17,7 @@ faiss-cpu
 sentence-transformers
 langchain-huggingface
 python-dotenv
+plotly
+streamlit-extras
+streamlit-option-menu
+rich
