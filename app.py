@@ -848,7 +848,14 @@ elif selected == "AI Strategist":
                 st.warning("Priority: **MEDIUM** — Maintenance Mode")
 
         st.divider()
+        st.markdown("### 🔍 Specific Retention Query")
+        user_query = st.text_area(
+            "What specific focus should the AI agent have for this customer?",
+            placeholder="e.g. Propose a long-term contract with a focus on price sensitivity, or suggest a bundle for their children.",
+            help="Your query will guide the AI's reasoning and recommendation process."
+        )
 
+        st.markdown("<br>", unsafe_allow_html=True)
         if st.button("🤖  Start Expert AI Analysis", width='stretch'):
             with st.status("Senior Agent thinking...", expanded=True) as status:
                 try:
@@ -863,6 +870,7 @@ elif selected == "AI Strategist":
                     result = run_retention_agent(
                         st.session_state.customer_data,
                         st.session_state.churn_prob,
+                        user_query=user_query
                     )
 
                     progress_bar.progress(65)
