@@ -274,26 +274,33 @@ def train_and_save_artifacts():
     st.warning("Model artifacts not found. Training a new model. This may take a moment...")
     df = pd.read_csv("telco_customer_churn.csv").drop(columns=["customerID"])
     df["TotalCharges"] = df["TotalCharges"].replace({" ": "0.0"}).astype(float)
-    # Simple preprocessing and model for demonstration
     from sklearn.model_selection import train_test_split
     from sklearn.ensemble import RandomForestClassifier
     from sklearn.pipeline import Pipeline
-    from sklearn.preprocessing import StandardScaler, LabelEncoder
+    from sklearn.compose import ColumnTransformer
+    from sklearn.preprocessing import StandardScaler, OneHotEncoder
     import joblib
-    # Encode categorical columns
+
     X = df.drop("Churn", axis=1)
     y = df["Churn"].map({"Yes": 1, "No": 0})
-    for col in X.select_dtypes(include=["object"]).columns:
-        X[col] = LabelEncoder().fit_transform(X[col].astype(str))
-    feature_columns = X.columns.tolist()
-    X_train, _, y_train, _ = train_test_split(X, y, test_size=0.2, random_state=42)
+    # Identify categorical and numeric columns
+    categorical_cols = X.select_dtypes(include=["object"]).columns.tolist()
+    numeric_cols = X.select_dtypes(include=["int64", "float64"]).columns.tolist()
+
+    preprocessor = ColumnTransformer([
+        ("num", StandardScaler(), numeric_cols),
+        ("cat", OneHotEncoder(handle_unknown="ignore", sparse_output=False), categorical_cols),
+    ])
+
     pipeline = Pipeline([
-        ("scaler", StandardScaler()),
+        ("preprocessor", preprocessor),
         ("clf", RandomForestClassifier(n_estimators=50, random_state=42)),
     ])
+
+    X_train, _, y_train, _ = train_test_split(X, y, test_size=0.2, random_state=42)
     pipeline.fit(X_train, y_train)
     joblib.dump(pipeline, "model_pipeline.pkl")
-    joblib.dump(feature_columns, "feature_columns.pkl")
+    joblib.dump(X.columns.tolist(), "feature_columns.pkl")
     st.success("Model artifacts trained and saved.")
 
 
