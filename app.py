@@ -2,15 +2,16 @@ import os
 import re
 import warnings
 import time
+import pickle
 import numpy as np
 import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
-import streamlit as st
-from streamlit_option_menu import option_menu
-from streamlit_extras.metric_cards import style_metric_cards
-from rich.console import Console
-from rich.panel import Panel
+import streamlit as st # pyright: ignore[reportMissingImports]
+from streamlit_option_menu import option_menu # pyright: ignore[reportMissingImports]
+from streamlit_extras.metric_cards import style_metric_cards # pyright: ignore[reportMissingImports]
+from rich.console import Console # pyright: ignore[reportMissingImports]
+from rich.panel import Panel # pyright: ignore[reportMissingImports]
 from agent.agent_engine import process_customer_retention
 
 # ── Rich console for terminal logs ─────────────────────────────────────────────
@@ -32,11 +33,27 @@ warnings.filterwarnings("ignore")
 
 # ── Page config ────────────────────────────────────────────────────────────────
 st.set_page_config(
-    page_title="Slip — Telco Churn Intelligence",
-    page_icon="📡",
-    layout="wide",
-    initial_sidebar_state="expanded",
+        page_title="Slip — Telco Churn Intelligence",
+        page_icon="📡",
+        layout="wide",
+        initial_sidebar_state="expanded",
 )
+
+# Smooth scroll to top on rerun/page change (robust for Streamlit)
+st.markdown("""
+<style>
+html { scroll-behavior: smooth; }
+</style>
+<script>
+const scrollToTop = () => {
+    const main = window.parent.document.querySelector('section.main');
+    if (main) main.scrollTo({ top: 0, behavior: 'smooth' });
+};
+const observer = new MutationObserver(scrollToTop);
+observer.observe(window.parent.document.body, { childList: true, subtree: true });
+scrollToTop();
+</script>
+""", unsafe_allow_html=True)
 
 # ── Global CSS ─────────────────────────────────────────────────────────────────
 st.markdown("""
@@ -267,17 +284,52 @@ GREEN = "#34d399"
 # ── Artifacts / data ───────────────────────────────────────────────────────────
 import joblib
 
+# Auto-train and save model artifacts if missing
 ARTIFACTS = ["model_pipeline.pkl", "feature_columns.pkl"]
-if not all(os.path.exists(f) for f in ARTIFACTS):
-    st.error("Model artifacts not found. Run `churn.ipynb` first.")
-    st.info("The dashboard requires trained model artifacts to function.")
-    st.stop()
+def train_and_save_artifacts():
+    df = pd.read_csv("telco_customer_churn.csv").drop(columns=["customerID"])
+    df["TotalCharges"] = df["TotalCharges"].replace({" ": "0.0"}).astype(float)
+    # Ensure correct dtypes: SeniorCitizen as int, gender as string, etc.
+    df["SeniorCitizen"] = df["SeniorCitizen"].astype(int)
+    df["gender"] = df["gender"].astype(str)
+    from sklearn.model_selection import train_test_split
+    from sklearn.ensemble import RandomForestClassifier
+    from sklearn.pipeline import Pipeline
+    from sklearn.compose import ColumnTransformer
+    from sklearn.preprocessing import StandardScaler, OneHotEncoder
+    import joblib
+
+    X = df.drop("Churn", axis=1)
+    y = df["Churn"].map({"Yes": 1, "No": 0})
+    categorical_cols = X.select_dtypes(include=["object"]).columns.tolist()
+    numeric_cols = X.select_dtypes(include=["int64", "float64"]).columns.tolist()
+
+    preprocessor = ColumnTransformer([
+        ("num", StandardScaler(), numeric_cols),
+        ("cat", OneHotEncoder(handle_unknown="ignore", sparse_output=False), categorical_cols),
+    ])
+
+    pipeline = Pipeline([
+        ("preprocessor", preprocessor),
+        ("clf", RandomForestClassifier(n_estimators=50, random_state=42)),
+    ])
+
+    X_train, _, y_train, _ = train_test_split(X, y, test_size=0.2, random_state=42)
+    pipeline.fit(X_train, y_train)
+    joblib.dump(pipeline, "model_pipeline.pkl")
+    joblib.dump(X.columns.tolist(), "feature_columns.pkl")
 
 @st.cache_resource
 def load_artifacts():
-    pipeline       = joblib.load("model_pipeline.pkl")
-    feature_columns = joblib.load("feature_columns.pkl")
-    return pipeline, feature_columns
+    for _ in range(2):  # Try twice: first try, then retrain if needed
+        try:
+            pipeline = joblib.load("model_pipeline.pkl")
+            feature_columns = joblib.load("feature_columns.pkl")
+            return pipeline, feature_columns
+        except (EOFError, FileNotFoundError, pickle.UnpicklingError):
+            train_and_save_artifacts()
+    st.error("Failed to load or train model artifacts. Please check your data and code.")
+    st.stop()
 
 @st.cache_data
 def load_data():
@@ -324,7 +376,7 @@ def render_home_page():
     </div>
     """, unsafe_allow_html=True)
 
-    st.markdown("<br>", unsafe_allow_html=True)
+    # Removed unnecessary vertical space for better UX
 
     vector_index_ready = any(os.path.exists(p) for p in [
         "vectorstore/db_faiss/index.faiss",
@@ -332,11 +384,29 @@ def render_home_page():
     ])
     kb_ready = os.path.exists("knowledge_base/retention_strategies.md")
 
-    m1, m2, m3, m4 = st.columns(4)
-    m1.metric("Dataset Rows", f"{len(df):,}")
-    m2.metric("Model Features", f"{len(feature_columns)}")
-    m3.metric("Knowledge Base", "✅ Ready" if kb_ready else "❌ Missing")
-    m4.metric("Vector Index",   "✅ Ready" if vector_index_ready else "❌ Missing")
+    st.markdown("""
+    <style>
+    .metric-row {
+        display: flex;
+        gap: 32px;
+        margin-bottom: 18px;
+    }
+    .metric-row > div {
+        flex: 1;
+    }
+    </style>
+    """, unsafe_allow_html=True)
+    st.markdown('<div class="metric-row">', unsafe_allow_html=True)
+    m1, m2, m3, m4 = st.columns(4, gap="large")
+    with m1:
+        st.metric("Dataset Rows", f"{len(df):,}")
+    with m2:
+        st.metric("Model Features", f"{len(feature_columns)}")
+    with m3:
+        st.metric("Knowledge Base", "✅ Ready" if kb_ready else "❌ Missing")
+    with m4:
+        st.metric("Vector Index",   "✅ Ready" if vector_index_ready else "❌ Missing")
+    st.markdown('</div>', unsafe_allow_html=True)
     style_metric_cards(background_color="#0f1e36", border_left_color="#38bdf8", border_color="#1e2d45")
 
     st.markdown("<br>", unsafe_allow_html=True)
@@ -408,7 +478,9 @@ with st.sidebar:
             "icon":           {"color": "#38bdf8"},
         },
     )
-    st.session_state.active_tab = selected
+    if selected != st.session_state.active_tab:
+        st.session_state.active_tab = selected
+        st.rerun()
 
     st.markdown("<br>", unsafe_allow_html=True)
 
@@ -542,37 +614,40 @@ if selected == "Overview":
         st.markdown('</div>', unsafe_allow_html=True)
 
     # ── Row 3: internet service + heatmap ──
-    st.markdown('<div class="section-card">', unsafe_allow_html=True)
-    st.subheader("Internet Service vs Churn")
-    internet_churn = df.groupby(["InternetService", "Churn"]).size().reset_index(name="count")
-    internet_churn["Churn"] = internet_churn["Churn"].map({"No": "Retained", "Yes": "Churned"})
-    fig = px.bar(internet_churn, x="InternetService", y="count", color="Churn",
-                 barmode="group", color_discrete_map={"Retained": BLUE, "Churned": ORG},
-                 labels={"count": "Customers", "InternetService": "Internet Service"},
-                 template="plotly_dark")
-    apply_layout(fig, height=300, bargap=0.3)
-    fig.update_traces(marker_line_width=0)
-    st.plotly_chart(fig, width='stretch')
-    st.markdown('</div>', unsafe_allow_html=True)
-
+    if "InternetService" in df.columns and "Churn" in df.columns:
+        st.markdown('<div class="section-card">', unsafe_allow_html=True)
+        st.subheader("Internet Service vs Churn")
+        internet_churn = df.groupby(["InternetService", "Churn"]).size().reset_index(name="count")
+        internet_churn["Churn"] = internet_churn["Churn"].map({"No": "Retained", "Yes": "Churned"})
+        fig = px.bar(internet_churn, x="InternetService", y="count", color="Churn",
+                     barmode="group", color_discrete_map={"Retained": BLUE, "Churned": ORG},
+                     labels={"count": "Customers", "InternetService": "Internet Service"},
+                     template="plotly_dark")
+        apply_layout(fig, height=300, bargap=0.3)
+        fig.update_traces(marker_line_width=0)
+        st.plotly_chart(fig, width='stretch')
+        st.markdown('</div>', unsafe_allow_html=True)
+    
     # ── Correlation heatmap  ──
-    st.markdown('<div class="section-card">', unsafe_allow_html=True)
-    st.subheader("Feature Correlation Heatmap")
-    num_cols = ["tenure", "MonthlyCharges", "TotalCharges"]
-    corr_df  = df[num_cols].corr().round(2)
-    fig = go.Figure(go.Heatmap(
-        z=corr_df.values, x=corr_df.columns, y=corr_df.columns,
-        colorscale=[[0,"#0a1628"],[0.5,"#1d4ed8"],[1,"#38bdf8"]],
-        text=corr_df.values.round(2), texttemplate="%{text}",
-        hovertemplate="%{x} × %{y}: %{z}<extra></extra>",
-    ))
-    apply_layout(fig, height=450, margin=dict(l=50, r=50, t=50, b=50))
-    st.plotly_chart(fig, use_container_width=True)
-    st.markdown('</div>', unsafe_allow_html=True)
+    num_cols = [col for col in ["tenure", "MonthlyCharges", "TotalCharges"] if col in df.columns]
+    if len(num_cols) >= 2:
+        st.markdown('<div class="section-card">', unsafe_allow_html=True)
+        st.subheader("Feature Correlation Heatmap")
+        corr_df  = df[num_cols].corr().round(2)
+        fig = go.Figure(go.Heatmap(
+            z=corr_df.values, x=corr_df.columns, y=corr_df.columns,
+            colorscale=[[0,"#0a1628"],[0.5,"#1d4ed8"],[1,"#38bdf8"]],
+            text=corr_df.values.round(2), texttemplate="%{text}",
+            hovertemplate="%{x} × %{y}: %{z}<extra></extra>",
+        ))
+        apply_layout(fig, height=450, margin=dict(l=50, r=50, t=50, b=50))
+        st.plotly_chart(fig, width='stretch')
+        st.markdown('</div>', unsafe_allow_html=True)
 
-    st.divider()
-    st.subheader("Sample Data (first 100 rows)")
-    st.dataframe(df.head(100), width='stretch')
+    if len(df) > 0:
+        st.divider()
+        st.subheader("Sample Data (first 100 rows)")
+        st.dataframe(df.head(100), width='stretch')
 
 # ══════════════════════════════════════════════════════════════════════════════
 #  TAB 2 — CHURN PREDICTION
@@ -638,7 +713,7 @@ elif selected == "Churn Prediction":
                 streaming_movies  = st.selectbox("Streaming Movies", ["No", "Yes", "No internet service"])
 
         st.markdown("<br>", unsafe_allow_html=True)
-        submitted = st.form_submit_button("🚀 Run Churn Analysis", width='stretch', use_container_width=True)
+        submitted = st.form_submit_button("🚀 Run Churn Analysis", width='stretch')
     st.markdown('</div>', unsafe_allow_html=True)
 
 
@@ -654,12 +729,11 @@ elif selected == "Churn Prediction":
             time.sleep(0.4)
             st.write("Executing predictive model...")
 
+
+            # Only include columns used in training (feature_columns)
             input_data = {
-                "CustomerName": customer_name.strip() or "Customer",
-                "CustomerEmail": customer_email.strip(),
-                "CompanyName": company_name.strip() or "Telco",
                 "gender": gender,
-                "SeniorCitizen": 1 if senior_citizen == "Yes" else 0,
+                "SeniorCitizen": 1 if senior_citizen == "Yes" else 0,  # Pass as int, matching CSV
                 "Partner": partner, "Dependents": dependents,
                 "tenure": tenure, "PhoneService": phone_service,
                 "MultipleLines": multiple_lines, "InternetService": internet_service,
@@ -670,8 +744,7 @@ elif selected == "Churn Prediction":
                 "PaymentMethod": payment_method,
                 "MonthlyCharges": monthly_charges, "TotalCharges": total_charges,
             }
-
-            input_df  = pd.DataFrame([input_data]).reindex(columns=feature_columns, fill_value=0)
+            input_df = pd.DataFrame([input_data])[feature_columns]
             prediction = pipeline.predict(input_df)[0]
             proba      = pipeline.predict_proba(input_df)[0]
             churn_prob = proba[1] * 100
@@ -723,9 +796,6 @@ elif selected == "Churn Prediction":
         </div>
         """, unsafe_allow_html=True)
 
-
-
-
         col_gau, col_bar = st.columns([1, 1])
         
         with col_gau:
@@ -748,7 +818,7 @@ elif selected == "Churn Prediction":
                 },
             ))
             apply_layout(fig, height=260, margin=dict(l=30, r=30, t=50, b=10))
-            st.plotly_chart(fig, use_container_width=True)
+            st.plotly_chart(fig, width='stretch')
 
         with col_bar:
             # Horizontal prob bar
@@ -763,7 +833,7 @@ elif selected == "Churn Prediction":
             ))
             apply_layout(fig2, height=260, xaxis=dict(showgrid=False, zeroline=False, range=[0, 100], showticklabels=False),
                          yaxis=dict(showgrid=False, zeroline=False))
-            st.plotly_chart(fig2, use_container_width=True)
+            st.plotly_chart(fig2, width='stretch')
         st.markdown('</div>', unsafe_allow_html=True)
 
 
@@ -1020,7 +1090,7 @@ elif selected == "Model Performance":
         
         apply_layout(fig_bench, height=300, showlegend=False)
         fig_bench.update_traces(textposition='inside', marker_line_width=0)
-        st.plotly_chart(fig_bench, use_container_width=True)
+        st.plotly_chart(fig_bench, width='stretch')
         
     with col_bench2:
         # Winner Card

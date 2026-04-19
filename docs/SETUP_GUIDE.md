@@ -34,7 +34,7 @@ streamlit run app.py
 Open your terminal and run the following command to clone the project:
 
 ```bash
-git clone https://github.com/MAYANKSHARMA01010/GEN_AI_MID_TERM.git
+git clone https://github.com/MAYANKSHARMA01010/Slip
 ```
 
 Navigate into the project directory:
