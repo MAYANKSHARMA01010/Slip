@@ -44,7 +44,7 @@ def get_llm_response(prompt: str, log: List[str], state: AgentState):
                 else:
                     llm = provider["class"](model=provider["model"], api_key=api_key)
                 
-                log.append(f"🚀 Using {provider['name']} for generation...")
+                log.append(f"[lucide:rocket] Using {provider['name']} for generation...")
                 response = llm.invoke(prompt)
                 
                 if hasattr(response, "content"):
@@ -54,7 +54,7 @@ def get_llm_response(prompt: str, log: List[str], state: AgentState):
                         content = str(response.content)
                     return content, provider["name"]
             except Exception as e:
-                log.append(f"⚠️ {provider['name']} failed: {str(e)[:100]}...")
+                log.append(f"[lucide:alert-triangle] {provider['name']} failed: {str(e)[:100]}...")
                 continue
     
     # If all AI providers fail, we signal the switch to Heuristic Mode.
@@ -82,14 +82,14 @@ def analyze_customer(state: AgentState):
     """
     
     log = state.get('thought_log', [])
-    log.append("🧠 Identifying primary risk factors from customer profile...")
+    log.append("[lucide:brain] Identifying primary risk factors from customer profile...")
     
     analysis, provider = get_llm_response(analysis_prompt, log, state)
     
     # Fallback reasoning if the AI is unreachable
     if not analysis:
         analysis = f"Strategic Analysis: High risk detected for {data['Contract']} customer with {data['InternetService']} service. Priorities: Contract stability and service value."
-        log.append("💡 Switching to heuristic mode for this step.")
+        log.append("[lucide:lightbulb] Switching to heuristic mode for this step.")
     
     return {"analysis": analysis, "active_provider": provider, "thought_log": log}
 
@@ -110,7 +110,7 @@ def retrieve_knowledge(state: AgentState):
     context = "\n\n".join(strategies)
     
     log = state.get('thought_log', [])
-    log.append("🔍 Searching internal knowledge base for proven retention playbooks...")
+    log.append("[lucide:search] Searching internal knowledge base for proven retention playbooks...")
     
     return {"retrieved_strategies": context, "thought_log": log}
 
@@ -151,7 +151,7 @@ def generate_report(state: AgentState):
     """
     
     log = state.get('thought_log', [])
-    log.append("📝 Synthesizing insights and drafting personalized intervention plan...")
+    log.append("[lucide:file-text] Synthesizing insights and drafting personalized intervention plan...")
     
     final_report, provider = get_llm_response(prompt, log, state)
     
@@ -175,8 +175,8 @@ Internal Playbook v2.1
 **5. Business & Ethical Disclaimer**
 AI-generated. Review by professional required.
 """
-        final_report = f"> 💡 **Expert Heuristics**: Using strategic fallback logic.\n\n" + heuristic_report
-        log.append("💡 Switched to Heuristic Mode for final report.")
+        final_report = f"> [lucide:lightbulb] **Expert Heuristics**: Using strategic fallback logic.\n\n" + heuristic_report
+        log.append("[lucide:lightbulb] Switched to Heuristic Mode for final report.")
 
     return {"final_report": final_report, "active_provider": provider, "thought_log": log}
 

@@ -1,6 +1,7 @@
 import os
 import re
 import warnings
+import urllib.parse
 import time
 import pickle
 import numpy as np
@@ -14,8 +15,61 @@ from rich.console import Console # pyright: ignore[reportMissingImports]
 from rich.panel import Panel # pyright: ignore[reportMissingImports]
 from agent.agent_engine import process_customer_retention
 
+# Primary semantic color palette.
+BLUE  = "#38bdf8"
+ORG   = "#f97316"
+PURP  = "#a78bfa"
+GREEN = "#34d399"
+
 # Initialize the console for descriptive terminal logging.
 console = Console()
+
+def lucide_icon(name, size=20, color="currentColor", extra_style=""):
+    """
+    Render a Lucide icon as a robust CSS mask.
+    Using standard mask properties for better cross-browser/Streamlit compatibility.
+    """
+    url = f"https://unpkg.com/lucide-static@latest/icons/{name}.svg"
+    style = (
+        f"display: inline-block; width: {size}px; height: {size}px; "
+        f"background-color: {color}; "
+        f"-webkit-mask-image: url('{url}'); "
+        f"mask-image: url('{url}'); "
+        f"-webkit-mask-repeat: no-repeat; "
+        f"mask-repeat: no-repeat; "
+        f"-webkit-mask-position: center; "
+        f"mask-position: center; "
+        f"-webkit-mask-size: contain; "
+        f"mask-size: contain; "
+        f"vertical-align: middle; {extra_style}"
+    )
+    return f'<span class="lucide-icon" style="{style}"></span>'
+
+def parse_lucide_tags(text):
+    """Replace [lucide:icon-name] with HTML icon tags, perfectly aligned."""
+    if not isinstance(text, str): return text
+    # Using vertical-align: -15% to center icons with the text baseline for a premium look.
+    return re.sub(r'\[lucide:([a-z0-9-]+)\]', lambda m: lucide_icon(m.group(1), size=18, extra_style="vertical-align: -15%; margin-right: 5px;"), text)
+
+def render_header(title, icon_name, color=BLUE, font_size="1.5rem"):
+    """Render a perfectly aligned section header with an icon."""
+    st.markdown(f"""
+    <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 20px;">
+        {lucide_icon(icon_name, size=24, color=color)}
+        <h3 style="margin: 0; font-size: {font_size}; font-weight: 700; color: #fff;">{title}</h3>
+    </div>
+    """, unsafe_allow_html=True)
+
+def render_status_metric(label, value, icon_name=None, color=BLUE, help_text=None):
+    """Render a custom metric card with an integrated status icon."""
+    icon_html = f'<div style="margin-top: 8px;">{lucide_icon(icon_name, size=18, color=color)}</div>' if icon_name else ""
+    st.markdown(f"""
+    <div style="background: #0f1e36; border: 1px solid #1e2d45; border-radius: 12px; padding: 16px; border-left: 4px solid {color};">
+        <div style="color: #94a3b8; font-size: 0.85rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em;">{label}</div>
+        <div style="color: #fff; font-size: 1.8rem; font-weight: 800; margin: 4px 0;">{value}</div>
+        {icon_html}
+    </div>
+    """, unsafe_allow_html=True)
 
 # Track session data, results, and active tabs to maintain state across reruns.
 for key, default in {
@@ -29,12 +83,18 @@ for key, default in {
     if key not in st.session_state:
         st.session_state[key] = default
 
+# Handle navigation actions from custom HTML components.
+if st.query_params.get("nav") == "home":
+    st.session_state.show_dashboard = False
+    st.query_params.clear()
+    st.rerun()
+
 warnings.filterwarnings("ignore")
 
 # Configure dashboard metadata and sidebar layout.
 st.set_page_config(
         page_title="Slip — Telco Churn Intelligence",
-        page_icon="📡",
+        page_icon="https://unpkg.com/lucide-static@latest/icons/signal.svg",
         layout="wide",
         initial_sidebar_state="expanded",
 )
@@ -273,11 +333,6 @@ def apply_layout(fig, height=None, margin=None, xaxis=None, yaxis=None, **extra)
     fig.update_layout(**layout_params)
     return fig
 
-BLUE  = "#38bdf8"
-ORG   = "#f97316"
-PURP  = "#a78bfa"
-GREEN = "#34d399"
-
 import joblib
 
 # Automatically train and save model artifacts if they are missing.
@@ -341,7 +396,7 @@ console.print(Panel("[bold green]Slip Dashboard loaded[/bold green]", title="[cy
 
 # Render the landing page for initial user interaction.
 def render_home_page():
-    st.markdown("""
+    st.markdown(f"""
     <div class="hero-shell">
         <div class="hero-nav">
             <div class="hero-brand">Sli<span>p</span></div>
@@ -359,11 +414,11 @@ def render_home_page():
                 RAG-powered knowledge retrieval, and agentic AI reasoning — all in one workspace.
             </p>
             <div class="pill-row">
-                <span class="pill">🤖 LangGraph Agent</span>
-                <span class="pill">📊 ML Pipeline</span>
-                <span class="pill">🔍 RAG Knowledge Base</span>
-                <span class="pill">📥 Downloadable Reports</span>
-                <span class="pill">🎨 Interactive Charts</span>
+                <span class="pill">{lucide_icon("cpu", size=14)} LangGraph Agent</span>
+                <span class="pill">{lucide_icon("bar-chart-3", size=14)} ML Pipeline</span>
+                <span class="pill">{lucide_icon("database", size=14)} RAG Knowledge Base</span>
+                <span class="pill">{lucide_icon("file-down", size=14)} Downloadable Reports</span>
+                <span class="pill">{lucide_icon("pie-chart", size=14)} Interactive Charts</span>
             </div>
         </div>
     </div>
@@ -387,50 +442,51 @@ def render_home_page():
     }
     </style>
     """, unsafe_allow_html=True)
-    st.markdown('<div class="metric-row">', unsafe_allow_html=True)
-    m1, m2, m3, m4 = st.columns(4, gap="large")
+    m1, m2, m3, m4 = st.columns(4, gap="medium")
     with m1:
-        st.metric("Dataset Rows", f"{len(df):,}")
+        render_status_metric("Dataset Rows", f"{len(df):,}", "database", BLUE)
     with m2:
-        st.metric("Model Features", f"{len(feature_columns)}")
+        render_status_metric("Model Features", f"{len(feature_columns)}", "cpu", BLUE)
     with m3:
-        st.metric("Knowledge Base", "✅ Ready" if kb_ready else "❌ Missing")
+        render_status_metric("Knowledge Base", "Ready" if kb_ready else "Missing", 
+                             "check-circle" if kb_ready else "x-circle", 
+                             "#10b981" if kb_ready else "#f43f5e")
     with m4:
-        st.metric("Vector Index",   "✅ Ready" if vector_index_ready else "❌ Missing")
-    st.markdown('</div>', unsafe_allow_html=True)
-    style_metric_cards(background_color="#0f1e36", border_left_color="#38bdf8", border_color="#1e2d45")
+        render_status_metric("Vector Index", "Ready" if vector_index_ready else "Missing", 
+                             "check-circle" if vector_index_ready else "x-circle", 
+                             "#10b981" if vector_index_ready else "#f43f5e")
 
     st.markdown("<br>", unsafe_allow_html=True)
 
     c1, c2, c3 = st.columns(3)
     with c1:
-        st.markdown("""<div class="info-card">
-            <h4>🎯 What it does</h4>
+        st.markdown(f"""<div class="info-card">
+            <h4>{lucide_icon("target", size=18, color=BLUE)} &nbsp; What it does</h4>
             <p>Estimates churn probability from customer profile data and converts ML outputs into
                business-focused retention guidance via an AI agent.</p>
         </div>""", unsafe_allow_html=True)
     with c2:
-        st.markdown("""<div class="info-card">
-            <h4>⚙️ How it works</h4>
+        st.markdown(f"""<div class="info-card">
+            <h4>{lucide_icon("settings", size=18, color=BLUE)} &nbsp; How it works</h4>
             <p>Input customer attributes → preprocessing pipeline → risk scoring →
                LangGraph + RAG agent → personalised intervention plan.</p>
         </div>""", unsafe_allow_html=True)
     with c3:
-        st.markdown("""<div class="info-card">
-            <h4>📂 Data supported</h4>
+        st.markdown(f"""<div class="info-card">
+            <h4>{lucide_icon("folder-open", size=18, color=BLUE)} &nbsp; Data supported</h4>
             <p>Structured CSV records, model artifacts (.pkl), markdown strategy docs,
                and FAISS vector indexes for retrieval-augmented planning.</p>
         </div>""", unsafe_allow_html=True)
 
-    st.markdown("""<div class="flow-box">
-        <h3>Product Flow</h3>
+    st.markdown(f"""<div class="flow-box">
+        <h3>{lucide_icon("workflow", size=22, color=BLUE)} &nbsp; Product Flow</h3>
         <p class="flow-step"><strong>1.</strong> Explore churn trends in the analytics dashboard.</p>
         <p class="flow-step"><strong>2.</strong> Predict churn probability for any customer profile.</p>
         <p class="flow-step"><strong>3.</strong> Generate an expert retention strategy and download the report.</p>
     </div>""", unsafe_allow_html=True)
 
     st.markdown("<br>", unsafe_allow_html=True)
-    if st.button("🚀  Enter Dashboard", width='stretch'):
+    if st.button("Enter Dashboard", width='stretch'):
         st.session_state.show_dashboard = True
         st.rerun()
 
@@ -453,7 +509,7 @@ with st.sidebar:
     selected = option_menu(
         menu_title=None,
         options=["Overview", "Churn Prediction", "AI Strategist", "Model Performance"],
-        icons=["bar-chart-fill", "cpu-fill", "robot", "activity"],
+        icons=["graph-up", "cpu", "robot", "activity"],
         default_index=["Overview", "Churn Prediction", "AI Strategist", "Model Performance"].index(
             st.session_state.active_tab
         ),
@@ -493,14 +549,26 @@ with st.sidebar:
     """, unsafe_allow_html=True)
 
     st.markdown("<br>", unsafe_allow_html=True)
-    if st.button("← Back to Home", width='stretch'):
-        st.session_state.show_dashboard = False
-        st.rerun()
+    
+    # Unified Back Button Card - Perfectly aligned using Flexbox
+    st.markdown(f"""
+    <a href="/?nav=home" target="_self" style="text-decoration: none;">
+        <div style="display: flex; align-items: center; justify-content: center; gap: 10px; 
+                    background: linear-gradient(135deg, #1d4ed8 0%, #1e40af 100%); 
+                    color: white; padding: 12px; border-radius: 12px; 
+                    font-weight: 600; font-size: 0.95rem; cursor: pointer;
+                    box-shadow: 0 4px 12px rgba(29, 78, 216, 0.3);
+                    transition: all 0.2s ease; border: 1px solid rgba(255,255,255,0.1);">
+            {lucide_icon("arrow-left", size=18, color="white")}
+            <span>Back to Home</span>
+        </div>
+    </a>
+    """, unsafe_allow_html=True)
 
 # App header section.
-st.markdown("""
+st.markdown(f"""
 <div class="app-header">
-    <div class="app-header-icon">📡</div>
+    <div class="app-header-icon">{lucide_icon("tower-control", size=32, color=BLUE)}</div>
     <div>
         <h1 class="app-title">Slip — Churn Command Center</h1>
         <p class="app-subtitle">Monitor churn signals · Predict risk · Generate AI-powered retention actions</p>
@@ -518,7 +586,7 @@ if selected == "Overview":
                </h1>
                <p style="margin: 4px 0 0; color: #64748b; font-size: 0.95rem;">Telco Customer Analysis & Behavioral Insights</p>
             </div>
-            <div class="status-pill"><div class="status-dot"></div> System Operational</div>
+            <div class="status-pill"><div class="status-dot"></div> {lucide_icon("shield-check", size=12)} &nbsp; System Operational</div>
         </div>
     """, unsafe_allow_html=True)
 
@@ -634,11 +702,11 @@ if selected == "Overview":
 # Churn Prediction phase: Calculate risk for specific customer profiles.
 elif selected == "Churn Prediction":
     st.markdown('<div class="section-card">', unsafe_allow_html=True)
-    st.markdown("### 📋 Customer Profile Intelligence")
+    st.markdown(f"### {lucide_icon('clipboard-list', size=24, color=BLUE)} &nbsp; Customer Profile Intelligence", unsafe_allow_html=True)
     st.caption("Enter the customer details below to calculate churn probability and generate retention strategies.")
     
     with st.form("prediction_form", border=False):
-        st.markdown("#### 👤 Step 1: Identity & Basics")
+        st.markdown(f"#### {lucide_icon('user', size=18, color=BLUE)} &nbsp; Step 1: Identity & Basics", unsafe_allow_html=True)
         c_i1, c_i2, c_i3 = st.columns([1, 1.2, 1])
         with c_i1: customer_name  = st.text_input("Full Name", value="", placeholder="e.g. John Doe")
         with c_i2: customer_email = st.text_input("Email Address", value="", placeholder="john.doe@example.com")
@@ -646,7 +714,7 @@ elif selected == "Churn Prediction":
         
         st.markdown("<br>", unsafe_allow_html=True)
         
-        st.markdown("#### 💳 Step 2: Account & Subscription")
+        st.markdown(f"#### {lucide_icon('credit-card', size=18, color=BLUE)} &nbsp; Step 2: Account & Subscription", unsafe_allow_html=True)
         a1, a2, a3 = st.columns(3)
         with a1:
             tenure            = st.number_input("Tenure (Months)", min_value=0, max_value=120, value=12, help="How long as a customer")
@@ -663,7 +731,7 @@ elif selected == "Churn Prediction":
 
         st.markdown("<br>", unsafe_allow_html=True)
         
-        st.markdown("#### 🛠️ Step 3: Service & Technical Profile")
+        st.markdown(f"#### {lucide_icon('wrench', size=18, color=BLUE)} &nbsp; Step 3: Service & Technical Profile", unsafe_allow_html=True)
         
         d1, d2 = st.columns(2)
         with d1:
@@ -673,7 +741,8 @@ elif selected == "Churn Prediction":
             partner        = st.selectbox("Has Partner?", ["Yes", "No"])
             dependents     = st.selectbox("Has Dependents?", ["Yes", "No"])
             
-        with st.expander("🌐 Advanced Service Details", expanded=False):
+        with st.expander(f"Advanced Service Details", expanded=False):
+            st.markdown(f"<div style='margin-bottom:10px;'>{lucide_icon('globe', size=16, color=BLUE)} &nbsp; Network Configuration</div>", unsafe_allow_html=True)
             st.caption("Toggle these settings for specific service configurations.")
             s1, s2, s3 = st.columns(3)
             with s1:
@@ -690,7 +759,7 @@ elif selected == "Churn Prediction":
                 streaming_movies  = st.selectbox("Streaming Movies", ["No", "Yes", "No internet service"])
 
         st.markdown("<br>", unsafe_allow_html=True)
-        submitted = st.form_submit_button("🚀 Run Churn Analysis", width='stretch')
+        submitted = st.form_submit_button("Run Churn Analysis", width='stretch')
     st.markdown('</div>', unsafe_allow_html=True)
 
     if submitted and not is_valid_email(customer_email):
@@ -733,15 +802,15 @@ elif selected == "Churn Prediction":
             f"Customer: [bold]{customer_name}[/bold] | Churn prob: [bold red]{churn_prob:.1f}%[/bold red]",
             title="[cyan]prediction[/cyan]"
         ))
-        st.toast("Prediction generated ✅")
-
+        st.toast("Prediction generated")
+        
         st.markdown('<div class="section-card">', unsafe_allow_html=True)
-        st.subheader("🎯 Analytical Verdict")
+        render_header("Analytical Verdict", "target", BLUE)
         
         # Visualize the final risk verdict with a high-fidelity risk card.
         status_color = "#f43f5e" if prediction == 1 else "#10b981"
         status_bg    = "rgba(244, 63, 94, 0.08)" if prediction == 1 else "rgba(16, 185, 129, 0.08)"
-        status_icon  = "⚠️" if prediction == 1 else "✅"
+        status_icon  = lucide_icon("alert-triangle", size=64, color=status_color) if prediction == 1 else lucide_icon("check-circle", size=64, color=status_color)
         status_label = "CRITICAL CHURN RISK" if prediction == 1 else "LOYAL CUSTOMER PROFILE"
         
         st.markdown(f"""
@@ -752,7 +821,7 @@ elif selected == "Churn Prediction":
                     text-align: center; 
                     margin-bottom: 30px;
                     box-shadow: inset 0 0 30px {status_color}11;">
-            <div style="font-size: 4.5rem; margin-bottom: 15px; filter: drop-shadow(0 0 10px {status_color}44);">{status_icon}</div>
+            <div style="margin-bottom: 25px; filter: drop-shadow(0 0 10px {status_color}44);">{status_icon}</div>
             <div style="color: {status_color}; font-weight: 800; font-size: 1.4rem; letter-spacing: 0.15em; margin-bottom: 8px; text-transform: uppercase;">
                 {status_label}
             </div>
@@ -813,11 +882,11 @@ elif selected == "Churn Prediction":
         st.divider()
 
         st.markdown('<div class="section-card">', unsafe_allow_html=True)
-        st.subheader("💡 Strategic Insights")
+        render_header("Strategic Insights", "lightbulb", color="#fbbf24")
         ci1, ci2 = st.columns(2)
 
         with ci1:
-            st.markdown("##### 🚩 Top Risk Drivers")
+            render_header("Top Risk Drivers", "alert-circle", color="#f43f5e", font_size="1.1rem")
             factors = []
             if contract        == "Month-to-month": factors.append("Month-to-month contract (High churn segment)")
             if internet_service == "Fiber optic":   factors.append("Fiber optic service (Quality/Price sensitivity)")
@@ -836,7 +905,7 @@ elif selected == "Churn Prediction":
                     """, unsafe_allow_html=True)
 
         with ci2:
-            st.markdown("##### 🛡️ Recommended Mitigation")
+            render_header("Recommended Mitigation", "shield-check", color="#10b981", font_size="1.1rem")
             recs = []
             if prediction == 1:
                 recs.append("Offer 10–20% 'Upgrade Reward' discount")
@@ -880,15 +949,17 @@ elif selected == "Churn Prediction":
         export_data["Churn_Probability"]   = f"{churn_prob:.1f}%"
         export_data["Stay_Probability"]    = f"{stay_prob:.1f}%"
         csv_data = pd.DataFrame([export_data]).to_csv(index=False).encode("utf-8")
-        st.download_button("📥  Download Prediction as CSV", csv_data,
+        st.download_button("Download Prediction as CSV", csv_data,
                            "churn_prediction_result.csv", "text/csv", width='stretch')
+        st.markdown(f'<div style="margin-top:-35px; text-align:right;">{lucide_icon("file-down", size=18, color=BLUE)}</div>', unsafe_allow_html=True)
 
 # Phase 3: Conversing with the AI Strategist for personalized actions.
 elif selected == "AI Strategist":
     st.subheader("AI-Driven Retention Strategy")
 
     if st.session_state.customer_data is None:
-        st.info("🔍  Run a prediction in **Churn Prediction** first to enable the AI Strategist.")
+        st.info("Run a prediction in Churn Prediction first to enable the AI Strategist.")
+        st.markdown(f'<div style="margin-top:-38px; margin-left:10px;">{lucide_icon("search", size=18)}</div>', unsafe_allow_html=True)
     else:
         st.markdown("""
         This agent uses **LangGraph** to process customer data, query a **RAG knowledge base**
@@ -918,7 +989,7 @@ elif selected == "AI Strategist":
         )
 
         st.markdown("<br>", unsafe_allow_html=True)
-        if st.button("🤖  Start Expert AI Analysis", width='stretch'):
+        if st.button("Start Expert AI Analysis", width='stretch'):
             with st.status("Senior Agent thinking...", expanded=True) as status:
                 try:
                     progress_bar        = st.progress(0)
@@ -943,8 +1014,7 @@ elif selected == "AI Strategist":
                     thought_log = result.get("thought_log", [])
                     total_logs  = max(1, len(thought_log))
                     for i, log_entry in enumerate(thought_log, start=1):
-                        st.write(log_entry)
-                        time.sleep(0.3)
+                        st.markdown(parse_lucide_tags(log_entry), unsafe_allow_html=True)
                         progress = min(95, 65 + int((i / total_logs) * 30))
                         progress_bar.progress(progress)
                         elapsed   = time.time() - start_time
@@ -976,50 +1046,71 @@ elif selected == "AI Strategist":
 
         if st.session_state.agent_result:
             if st.session_state.active_provider != "Heuristic Mode":
-                st.success(f"✅  Analysis Complete! (Generated via **{st.session_state.active_provider}**)")
+                st.success(f"Analysis Complete! (Generated via **{st.session_state.active_provider}**)")
+                st.markdown(f'<div style="margin-top:-35px;">{lucide_icon("check-circle", size=18)}</div>', unsafe_allow_html=True)
             else:
                 st.info("Expert Strategy Ready (Heuristic Fallback Mode)")
 
-            st.markdown(st.session_state.agent_result)
+            st.markdown(parse_lucide_tags(st.session_state.agent_result), unsafe_allow_html=True)
 
             report_text = f"SLIP — TELCO CHURN STRATEGY REPORT\n\n{st.session_state.agent_result}"
             st.download_button(
-                "📥  Download Full Retention Report",
+                "Download Full Retention Report",
                 report_text,
                 "retention_strategy_report.md",
                 "text/markdown",
                 width='stretch',
             )
 
-            # ── EMAIL FORWARDING (mailto) ──
+            # ── EMAIL FORWARDING (mailto Robust Implementation) ──
             try:
                 # Attempt to extract subject and body for the mailto link
-                email_section = st.session_state.agent_result.split("### 3. Draft Retention Email")[-1].split("### 4. Sources")[0]
+                # We search for the email section between "### 3." and "### 4."
+                raw_report = st.session_state.agent_result
+                email_section = ""
                 
-                subject = "Regarding your account - Important Update"
-                if "Subject:" in email_section:
-                    subject = email_section.split("Subject:")[-1].split("\n")[0].replace("*", "").strip()
+                if "### 3. Draft Retention Email" in raw_report:
+                    parts = raw_report.split("### 3. Draft Retention Email")[-1]
+                    email_section = parts.split("### 4.")[0] if "### 4." in parts else parts
                 
-                # Cleanup the body text for mailto
-                body = email_section.replace("Recipient:", "").replace("Subject:", "").replace("Body:", "").replace("***", "").strip()
-                body_encoded = body.replace('\n', '%0D%0A')
-                mailto_url = f"mailto:{st.session_state.customer_data.get('CustomerEmail', '')}?subject={subject}&body={body_encoded}"
-                
-                st.markdown(f"""
-                    <a href="{mailto_url}" target="_blank" style="text-decoration: none;">
-                        <div style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); 
-                                    color: white; padding: 12px; border-radius: 8px; text-align: center; 
-                                    font-weight: 600; margin-top: 10px; cursor: pointer; border: 1px solid rgba(255,255,255,0.2);
-                                    box-shadow: 0 4px 12px rgba(16, 185, 129, 0.2);">
-                            📧  Send via Email Client
-                        </div>
-                    </a>
-                """, unsafe_allow_html=True)
-            except Exception:
-                pass
+                if email_section:
+                    subject = "Regarding your account - Important Update"
+                    if "Subject:" in email_section:
+                        subject = email_section.split("Subject:")[1].split("\n")[0].replace("*", "").strip()
+                    
+                    # Extract the body (everything after 'Body:' or after the subject line)
+                    body_marker = "Body:" if "Body:" in email_section else "Subject:"
+                    body = email_section.split(body_marker)[-1].strip()
+                    if body_marker == "Subject:":
+                        # If we split by subject, remove the first line (the subject itself)
+                        body = "\n".join(body.split("\n")[1:]).strip()
+                    
+                    # Proper URL encoding to prevent HTML injection and breaking the href attribute
+                    safe_subject = urllib.parse.quote(subject)
+                    safe_body = urllib.parse.quote(body)
+                    customer_email = st.session_state.customer_data.get('CustomerEmail', '')
+                    mailto_url = f"mailto:{customer_email}?subject={safe_subject}&body={safe_body}"
+                    
+                    # Render as a professional high-fidelity button
+                    st.markdown(f"""
+                        <a href="{mailto_url}" target="_blank" style="text-decoration: none;">
+                            <div style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); 
+                                        color: white; padding: 14px; border-radius: 10px; text-align: center; 
+                                        font-weight: 700; margin-top: 15px; cursor: pointer; 
+                                        border: 1px solid rgba(255,255,255,0.25);
+                                        box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3);
+                                        transition: all 0.2s ease;">
+                                {lucide_icon("mail", size=20, color="white")} &nbsp; Send Action Plan via Email
+                            </div>
+                        </a>
+                    """, unsafe_allow_html=True)
+            except Exception as e:
+                # Log silently but prevent app crash
+                console.print(f"[red]Email link generation failed: {e}[/red]")
+
 # Phase 4: Validating the underlying ML model and pipeline health.
 elif selected == "Model Performance":
-    st.subheader("Model Performance & Diagnostics")
+    render_header("Model Performance & Diagnostics", "activity", color="#a78bfa")
     st.caption("Detailed view of the trained Machine Learning pipeline and its evaluation metrics.")
 
     # ── Performance Metrics ──
@@ -1034,7 +1125,7 @@ elif selected == "Model Performance":
 
     # ── Model Benchmarking Leaderboard ──
     st.markdown('<div class="section-card">', unsafe_allow_html=True)
-    st.subheader("Model Benchmarking Leaderboard")
+    render_header("Model Benchmarking Leaderboard", "award", color="#fbbf24")
     st.caption("Comparison of the top 3 models evaluated during the model selection phase.")
     
     col_bench1, col_bench2 = st.columns([1.5, 1])
@@ -1068,7 +1159,7 @@ elif selected == "Model Performance":
                     border: 1px solid rgba(251, 191, 36, 0.3); padding: 25px; border-radius: 12px; height: 100%;
                     box-shadow: 0 4px 15px rgba(0,0,0,0.3);">
             <h3 style="color: #fbbf24; margin-top: 0; display: flex; align-items: center; gap: 10px;">
-                <span>🏆</span> The Winner
+                <span>{lucide_icon("trophy", size=24, color="#fbbf24")}</span> The Winner
             </h3>
             <h4 style="margin: 15px 0 10px 0; color: #fff;">Random Forest Classifier</h4>
             <p style="font-size: 0.95rem; color: #94a3b8; line-height: 1.5;">
@@ -1089,7 +1180,7 @@ elif selected == "Model Performance":
 
     with c1:
         st.markdown('<div class="section-card">', unsafe_allow_html=True)
-        st.subheader("Confusion Matrix")
+        render_header("Confusion Matrix", "grid", color=BLUE)
         # Fixed data from churn.ipynb evaluation on test set
         z = [[882, 171], [149, 203]]
         x = ["Predicted: No", "Predicted: Yes"]
@@ -1109,7 +1200,7 @@ elif selected == "Model Performance":
 
     with c2:
         st.markdown('<div class="section-card">', unsafe_allow_html=True)
-        st.subheader("Feature Importance")
+        render_header("Feature Importance", "bar-chart-3", color=BLUE)
         
         # Extract features from the pipeline
         try:
@@ -1151,7 +1242,7 @@ elif selected == "Model Performance":
 
     # ── Model Config Card ──
     st.markdown('<div class="section-card">', unsafe_allow_html=True)
-    st.subheader("Model Configuration")
+    render_header("Model Configuration", "settings", color=BLUE)
     
     col_a, col_b = st.columns(2)
     with col_a:
