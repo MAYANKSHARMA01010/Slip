@@ -227,27 +227,34 @@ div.stButton > button:hover {
 }
 .hero-nav {
     display: flex; justify-content: space-between; align-items: center;
-    padding-bottom: 1.2rem; border-bottom: 1px solid #1e2d45; margin-bottom: 2rem;
+    padding: 0.8rem 0; border-bottom: 1px solid #1e2d45; margin-bottom: 2rem;
 }
 .hero-brand {
     font-size: 1.3rem; font-weight: 800; color: #f8fafc; letter-spacing: -0.02em;
+    line-height: 1; display: flex; align-items: center;
 }
 .hero-brand span { color: #38bdf8; }
-.hero-nav-links { display: flex; gap: 1.4rem; color: #64748b; font-size: 0.9rem; font-weight: 500; }
+.hero-nav-links { 
+    display: flex; gap: 1.4rem; color: #64748b; font-size: 0.9rem; font-weight: 500; 
+    line-height: 1; align-items: center;
+}
 .hero-title {
     font-size: clamp(2.2rem, 5vw, 4.2rem); font-weight: 800; line-height: 1.07;
     letter-spacing: -0.03em; color: #f8fafc; text-align: center; margin-bottom: 1rem;
 }
 .hero-title .accent { color: #38bdf8; }
 .hero-sub {
-    color: #94a3b8; font-size: clamp(1rem, 1.5vw, 1.2rem); max-width: 820px;
-    margin: 0 auto 1.8rem; text-align: center; line-height: 1.65;
+    color: #94a3b8; font-size: clamp(1rem, 1.5vw, 1.2rem); 
+    max-width: 850px; margin: 0 auto 1.8rem; text-align: center; 
+    line-height: 1.6; text-wrap: balance;
 }
 .pill-row { display: flex; justify-content: center; gap: 0.6rem; flex-wrap: wrap; }
 .pill {
     background: #111827; border: 1px solid #1e2d45; color: #93c5fd;
-    border-radius: 999px; padding: 0.32rem 0.85rem; font-size: 0.78rem; font-weight: 500;
+    border-radius: 999px; padding: 0.4rem 0.9rem; font-size: 0.78rem; font-weight: 500;
+    display: inline-flex; align-items: center; gap: 8px; line-height: 1;
 }
+.pill .lucide-icon { display: flex; align-items: center; margin-top: 1px; }
 .info-card {
     background: #0a1628; border: 1px solid #1e2d45; border-radius: 14px;
     padding: 1.1rem 1.3rem; min-height: 160px; height: 100%;
@@ -265,12 +272,12 @@ div.stButton > button:hover {
 /* Application Branding Elements */
 .app-header {
     background: linear-gradient(90deg, #0f1e36 0%, #0a1628 100%);
-    border: 1px solid #1e2d45; border-radius: 16px; padding: 1.1rem 1.4rem;
-    margin-bottom: 1rem; display: flex; align-items: center; gap: 1rem;
+    border: 1px solid #1e2d45; border-radius: 16px; padding: 1.2rem 1.6rem;
+    margin-bottom: 1.5rem; display: flex; align-items: center; gap: 1.4rem;
 }
-.app-header-icon { font-size: 2rem; }
-.app-title { margin: 0; color: #f8fafc; font-size: 1.8rem; font-weight: 800; letter-spacing: -0.02em; }
-.app-subtitle { margin: 0.2rem 0 0; color: #64748b; font-size: 0.92rem; }
+.app-header-icon { display: flex; align-items: center; line-height: 0; }
+.app-title { margin: 0; color: #f8fafc; font-size: 1.8rem; font-weight: 800; letter-spacing: -0.02em; line-height: 1.2; }
+.app-subtitle { margin: 4px 0 0; color: #64748b; font-size: 0.92rem; line-height: 1.4; }
 .badge {
     display: inline-block; margin-right: 0.4rem; margin-bottom: 0.3rem;
     background: #111827; color: #93c5fd; border: 1px solid #1e3a5f;
@@ -404,21 +411,33 @@ def render_home_page():
                 <span>Overview</span><span>Predict</span><span>AI Strategist</span><span>Docs</span>
             </div>
         </div>
-        <div style="padding:1rem 0 0.5rem;">
+        <div style="padding:1rem 0 0.5rem; text-align: center; display: flex; flex-direction: column; align-items: center;">
             <div class="hero-title">
                 Predict churn early.<br/>
                 <span class="accent">Retain every customer.</span>
             </div>
-            <p class="hero-sub">
-                A production-grade churn intelligence platform combining ML prediction,
-                RAG-powered knowledge retrieval, and agentic AI reasoning — all in one workspace.
-            </p>
-            <div class="pill-row">
-                <span class="pill">{lucide_icon("cpu", size=14)} LangGraph Agent</span>
-                <span class="pill">{lucide_icon("bar-chart-3", size=14)} ML Pipeline</span>
-                <span class="pill">{lucide_icon("database", size=14)} RAG Knowledge Base</span>
-                <span class="pill">{lucide_icon("file-down", size=14)} Downloadable Reports</span>
-                <span class="pill">{lucide_icon("pie-chart", size=14)} Interactive Charts</span>
+            <div style="text-align: center; margin-bottom: 2rem;">
+                <div style="display: inline-block; max-width: 820px; color: #94a3b8; font-size: clamp(1rem, 1.5vw, 1.1rem); line-height: 1.6;">
+                    A production-grade churn intelligence platform combining ML prediction,
+                    RAG-powered knowledge retrieval, and agentic AI reasoning — all in one workspace.
+                </div>
+            </div>
+            <div class="pill-row" style="display: flex; justify-content: center; gap: 10px; flex-wrap: wrap;">
+                <div class="pill" style="display: inline-flex; align-items: center; padding: 0.4rem 1rem; gap: 8px; background: #111827; border: 1px solid #1e2d45; border-radius: 999px; color: #93c5fd; font-size: 0.78rem; font-weight: 500;">
+                    {lucide_icon("cpu", size=14)} <span style="line-height: 1; display: inline-block; margin-top: 1px;">LangGraph Agent</span>
+                </div>
+                <div class="pill" style="display: inline-flex; align-items: center; padding: 0.4rem 1rem; gap: 8px; background: #111827; border: 1px solid #1e2d45; border-radius: 999px; color: #93c5fd; font-size: 0.78rem; font-weight: 500;">
+                    {lucide_icon("bar-chart-3", size=14)} <span style="line-height: 1; display: inline-block; margin-top: 1px;">ML Pipeline</span>
+                </div>
+                <div class="pill" style="display: inline-flex; align-items: center; padding: 0.4rem 1rem; gap: 8px; background: #111827; border: 1px solid #1e2d45; border-radius: 999px; color: #93c5fd; font-size: 0.78rem; font-weight: 500;">
+                    {lucide_icon("database", size=14)} <span style="line-height: 1; display: inline-block; margin-top: 1px;">RAG Knowledge Base</span>
+                </div>
+                <div class="pill" style="display: inline-flex; align-items: center; padding: 0.4rem 1rem; gap: 8px; background: #111827; border: 1px solid #1e2d45; border-radius: 999px; color: #93c5fd; font-size: 0.78rem; font-weight: 500;">
+                    {lucide_icon("file-down", size=14)} <span style="line-height: 1; display: inline-block; margin-top: 1px;">Downloadable Reports</span>
+                </div>
+                <div class="pill" style="display: inline-flex; align-items: center; padding: 0.4rem 1rem; gap: 8px; background: #111827; border: 1px solid #1e2d45; border-radius: 999px; color: #93c5fd; font-size: 0.78rem; font-weight: 500;">
+                    {lucide_icon("pie-chart", size=14)} <span style="line-height: 1; display: inline-block; margin-top: 1px;">Interactive Charts</span>
+                </div>
             </div>
         </div>
     </div>
@@ -568,7 +587,7 @@ with st.sidebar:
 # App header section.
 st.markdown(f"""
 <div class="app-header">
-    <div class="app-header-icon">{lucide_icon("tower-control", size=32, color=BLUE)}</div>
+    <div class="app-header-icon">{lucide_icon("tower-control", size=36, color=BLUE)}</div>
     <div>
         <h1 class="app-title">Slip — Churn Command Center</h1>
         <p class="app-subtitle">Monitor churn signals · Predict risk · Generate AI-powered retention actions</p>
@@ -958,8 +977,15 @@ elif selected == "AI Strategist":
     st.subheader("AI-Driven Retention Strategy")
 
     if st.session_state.customer_data is None:
-        st.info("Run a prediction in Churn Prediction first to enable the AI Strategist.")
-        st.markdown(f'<div style="margin-top:-38px; margin-left:10px;">{lucide_icon("search", size=18)}</div>', unsafe_allow_html=True)
+        st.markdown(f"""
+        <div style="background: rgba(56, 189, 248, 0.1); border: 1px solid rgba(56, 189, 248, 0.2); 
+                    border-radius: 12px; padding: 1rem 1.2rem; display: flex; align-items: center; gap: 12px; margin-bottom: 1rem;">
+            {lucide_icon("search", size=20, color=BLUE)}
+            <div style="color: #38bdf8; font-size: 0.95rem; font-weight: 500;">
+                Run a prediction in Churn Prediction first to enable the AI Strategist.
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
     else:
         st.markdown("""
         This agent uses **LangGraph** to process customer data, query a **RAG knowledge base**
