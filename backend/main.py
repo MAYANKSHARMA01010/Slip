@@ -5,9 +5,16 @@ import pandas as pd
 from typing import Optional, List
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
 
-from agent_engine import process_customer_retention
+from agent_engine import process_customer_retention, stream_customer_retention
+from rag_utils import (
+    list_kb_articles,
+    create_vector_db,
+    get_manifest,
+    KB_DIR,
+)
 
 app = FastAPI(
     title="Slip Churn Intelligence Backend",
@@ -114,6 +121,10 @@ class StrategyRequest(BaseModel):
     customer_data: dict
     churn_prob: float
     user_query: Optional[str] = ""
+
+class KnowledgeArticle(BaseModel):
+    title: str
+    content: str  # Full Markdown body
 
 @app.get("/")
 def read_root():
@@ -314,6 +325,119 @@ def get_strategy(request: StrategyRequest):
         }
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Strategy generation failed: {str(e)}")
+
+
+@app.post("/strategy/stream")
+def stream_strategy(request: StrategyRequest):
+    """
+    Streaming variant of /strategy — returns Server-Sent Events so the
+    frontend can display each thought-log step as it happens in real time.
+    """
+    return StreamingResponse(
+        stream_customer_retention(
+            customer_data=request.customer_data,
+            churn_prob=request.churn_prob,
+            user_query=request.user_query,
+        ),
+        media_type="text/event-stream",
+        headers={
+            "Cache-Control": "no-cache",
+            "X-Accel-Buffering": "no",   # Disable Nginx/proxy buffering
+        },
+    )
+
+
+# ─── Knowledge Base Management ──────────────────────────────────────────────
+
+@app.get("/knowledge")
+def get_knowledge_articles():
+    """List all articles in the knowledge base with metadata."""
+    try:
+        articles = list_kb_articles()
+        manifest = get_manifest()
+        return {
+            "articles": articles,
+            "total_files": len(articles),
+            "total_chunks_indexed": manifest.get("total_chunks", "not built yet"),
+            "last_rebuilt": manifest.get("last_built", "never"),
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.post("/knowledge", status_code=201)
+def add_knowledge_article(article: KnowledgeArticle):
+    """
+    Add a new Markdown article to the knowledge base.
+    The FAISS vectorstore is automatically rebuilt after saving.
+    """
+    try:
+        # Sanitize title → safe filename
+        safe_name = "".join(
+            c if c.isalnum() or c in " -_" else "" for c in article.title
+        ).strip().replace(" ", "_").lower()
+        filename = f"{safe_name}.md"
+        fpath = os.path.join(KB_DIR, filename)
+
+        if os.path.exists(fpath):
+            raise HTTPException(
+                status_code=409,
+                detail=f"Article '{filename}' already exists. Choose a different title.",
+            )
+
+        with open(fpath, "w", encoding="utf-8") as f:
+            f.write(f"# {article.title}\n\n{article.content}")
+
+        create_vector_db(force=True)
+
+        return {
+            "message": f"Article '{filename}' added and vectorstore rebuilt.",
+            "filename": filename,
+        }
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.delete("/knowledge/{filename}")
+def delete_knowledge_article(filename: str):
+    """
+    Delete a knowledge base article by filename and rebuild vectorstore.
+    AI-generated files (ai_enriched_*) can also be removed this way.
+    """
+    # Safety: no path traversal
+    if any(c in filename for c in ("..", "/", "\\")):
+        raise HTTPException(status_code=400, detail="Invalid filename.")
+
+    fpath = os.path.join(KB_DIR, filename)
+    if not os.path.exists(fpath):
+        raise HTTPException(status_code=404, detail=f"Article '{filename}' not found.")
+
+    os.remove(fpath)
+    create_vector_db(force=True)
+
+    return {"message": f"Article '{filename}' deleted and vectorstore rebuilt."}
+
+
+@app.post("/knowledge/refresh")
+def refresh_knowledge_base():
+    """
+    Force a full rebuild of the FAISS vectorstore from the current knowledge_base/ folder.
+    Useful after manually editing files or dropping in new ones.
+    """
+    try:
+        create_vector_db(force=True)
+        articles = list_kb_articles()
+        manifest = get_manifest()
+        return {
+            "message": "Knowledge base rebuilt successfully.",
+            "files_indexed": len(articles),
+            "total_chunks": manifest.get("total_chunks"),
+            "articles": articles,
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
 @app.get("/metrics")
 def get_metrics():

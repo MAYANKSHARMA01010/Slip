@@ -29,9 +29,9 @@ export default function Prediction({
   setActiveTab
 }: PredictionProps) {
   // Form state
-  const [customerName, setCustomerName] = useState("John Doe");
-  const [customerEmail, setCustomerEmail] = useState("john.doe@example.com");
-  const [companyName, setCompanyName] = useState("Acme Corp");
+  const [customerName, setCustomerName] = useState("");
+  const [customerEmail, setCustomerEmail] = useState("");
+  const [companyName, setCompanyName] = useState("");
   
   const [gender, setGender] = useState("Male");
   const [seniorCitizen, setSeniorCitizen] = useState("No");
@@ -158,7 +158,7 @@ export default function Prediction({
     const encodedUri = encodeURI(csvContent);
     const link = document.createElement("a");
     link.setAttribute("href", encodedUri);
-    link.setAttribute("download", `churn_prediction_${customerName.replace(/\s+/g, '_')}.csv`);
+    link.setAttribute("download", `churn_prediction_${(customerName.trim() || 'customer').replace(/\s+/g, '_')}.csv`);
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);

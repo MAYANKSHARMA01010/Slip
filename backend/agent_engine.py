@@ -206,10 +206,11 @@ def create_agent():
     
     return workflow.compile()
 
-# --- Execution Entry Point ---
+# --- Execution Entry Point (batch) ---
 def process_customer_retention(customer_data: dict, churn_prob: float, user_query: str = ""):
     """
-    The main entry point for the API to interact with the AI Strategist.
+    Batch entry point — runs all nodes and returns when fully done.
+    Used by the non-streaming /strategy endpoint.
     """
     agent = create_agent()
     initial_state = {
@@ -219,3 +220,66 @@ def process_customer_retention(customer_data: dict, churn_prob: float, user_quer
         "thought_log": []
     }
     return agent.invoke(initial_state)
+
+
+# --- Streaming Entry Point ---
+import json as _json
+
+def stream_customer_retention(customer_data: dict, churn_prob: float, user_query: str = ""):
+    """
+    Generator that runs each LangGraph node manually and yields SSE events
+    in real time so the frontend can show live thought logs as they happen.
+
+    Yields strings in Server-Sent Events format:
+        data: <json>\\n\\n
+
+    Event types (in the JSON payload):
+        {"type": "log",    "message": "..."}   — a thought log line
+        {"type": "done",   "report": "...", "provider": "..."}  — final result
+        {"type": "error",  "message": "..."}   — failure
+    """
+    def _emit(payload: dict) -> str:
+        return f"data: {_json.dumps(payload)}\n\n"
+
+    state: AgentState = {
+        "customer_data": customer_data,
+        "churn_probability": churn_prob,
+        "user_query": user_query,
+        "retrieved_strategies": "",
+        "analysis": "",
+        "final_report": "",
+        "active_provider": "",
+        "thought_log": [],
+    }
+
+    try:
+        # ── Node 1: analyze ──────────────────────────────────────────────────
+        state["thought_log"] = []
+        result1 = analyze_customer(state)
+        state.update(result1)
+        for msg in state["thought_log"]:
+            yield _emit({"type": "log", "message": msg})
+
+        # ── Node 2: retrieve ─────────────────────────────────────────────────
+        prev_len = len(state["thought_log"])
+        result2 = retrieve_knowledge(state)
+        state.update(result2)
+        for msg in state["thought_log"][prev_len:]:
+            yield _emit({"type": "log", "message": msg})
+
+        # ── Node 3: generate ─────────────────────────────────────────────────
+        prev_len = len(state["thought_log"])
+        result3 = generate_report(state)
+        state.update(result3)
+        for msg in state["thought_log"][prev_len:]:
+            yield _emit({"type": "log", "message": msg})
+
+        # ── Final result ─────────────────────────────────────────────────────
+        yield _emit({
+            "type": "done",
+            "report": state["final_report"],
+            "provider": state["active_provider"],
+        })
+
+    except Exception as exc:
+        yield _emit({"type": "error", "message": str(exc)})

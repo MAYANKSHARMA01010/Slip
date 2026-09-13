@@ -1,60 +1,269 @@
 import os
+import json
+import hashlib
+import datetime
 from langchain_community.vectorstores import FAISS
 from langchain_huggingface import HuggingFaceEmbeddings
 from langchain_text_splitters import MarkdownHeaderTextSplitter
+from langchain_core.documents import Document
 
-# We'll store our FAISS vector index here for quick retrieval during agent sessions.
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-DB_FAISS_PATH = os.path.join(BASE_DIR, 'vectorstore/db_faiss')
+KB_DIR = os.path.join(BASE_DIR, "knowledge_base")
+DB_FAISS_PATH = os.path.join(BASE_DIR, "vectorstore/db_faiss")
+MANIFEST_PATH = os.path.join(BASE_DIR, "vectorstore/_manifest.json")
 
-def create_vector_db():
-    """
-    Parses our retention playbooks and embeds them into a searchable FAISS database.
-    """
-    kb_path = os.path.join(BASE_DIR, "knowledge_base/retention_strategies.md")
-    if not os.path.exists(kb_path):
-        raise FileNotFoundError(f"We couldn't find the playbook at {kb_path}. Please check the folder.")
+# Minimum chunks before Gemini auto-enrichment kicks in
+ENRICHMENT_THRESHOLD = 20
 
-    with open(kb_path, 'r', encoding='utf-8') as f:
-        markdown_document = f.read()
 
-    # We split the markdown by headers so the agent gets contextually relevant chunks.
+# --- File Discovery ---
+
+def get_kb_files() -> list[str]:
+    """Return sorted list of all .md and .txt files in the knowledge_base folder."""
+    if not os.path.exists(KB_DIR):
+        os.makedirs(KB_DIR, exist_ok=True)
+        return []
+    return [
+        os.path.join(KB_DIR, fname)
+        for fname in sorted(os.listdir(KB_DIR))
+        if fname.endswith((".md", ".txt")) and not fname.startswith("_")
+    ]
+
+
+# --- Hash & Manifest ---
+
+def compute_kb_hash() -> str:
+    """Compute a combined SHA256 hash of all KB file contents (detects any change)."""
+    h = hashlib.sha256()
+    for fpath in get_kb_files():
+        h.update(fpath.encode())
+        with open(fpath, "rb") as f:
+            h.update(f.read())
+    return h.hexdigest()
+
+
+def get_manifest() -> dict:
+    """Load the vectorstore manifest (last build hash, files, chunk count)."""
+    if os.path.exists(MANIFEST_PATH):
+        with open(MANIFEST_PATH, "r") as f:
+            return json.load(f)
+    return {}
+
+
+def _save_manifest(data: dict):
+    os.makedirs(os.path.dirname(MANIFEST_PATH), exist_ok=True)
+    with open(MANIFEST_PATH, "w") as f:
+        json.dump(data, f, indent=2)
+
+
+# --- Document Loading ---
+
+def _load_all_documents() -> list[Document]:
+    """Parse all KB files into LangChain Documents, split by markdown headers."""
     headers_to_split_on = [
         ("#", "Header 1"),
         ("##", "Header 2"),
         ("###", "Header 3"),
     ]
+    splitter = MarkdownHeaderTextSplitter(headers_to_split_on=headers_to_split_on)
+    all_docs: list[Document] = []
 
-    markdown_splitter = MarkdownHeaderTextSplitter(headers_to_split_on=headers_to_split_on)
-    md_header_splits = markdown_splitter.split_text(markdown_document)
+    for fpath in get_kb_files():
+        fname = os.path.basename(fpath)
+        with open(fpath, "r", encoding="utf-8") as f:
+            content = f.read()
 
-    # Initializing a lightweight embedding model to convert text into searchable vectors.
-    embeddings = HuggingFaceEmbeddings(
+        if fpath.endswith(".md"):
+            splits = splitter.split_text(content)
+            for doc in splits:
+                doc.metadata["source"] = fname
+                all_docs.append(doc)
+        else:
+            # Plain .txt: treat as a single chunk
+            all_docs.append(Document(page_content=content, metadata={"source": fname}))
+
+    return all_docs
+
+
+# --- LLM Enrichment ---
+
+def _enrich_with_llm():
+    """
+    Ask Gemini to generate additional retention strategy scenarios and save
+    the result as a new .md file in knowledge_base/. Only runs when the
+    KB chunk count is below ENRICHMENT_THRESHOLD.
+    """
+    try:
+        from dotenv import load_dotenv
+        load_dotenv(os.path.join(BASE_DIR, ".env"))
+
+        api_key = os.getenv("GOOGLE_API_KEY")
+        if not api_key or api_key.startswith("your_") or "api_key_here" in api_key:
+            print("[KB Enrichment] No valid Gemini key found — skipping enrichment.")
+            return
+
+        from langchain_google_genai import ChatGoogleGenerativeAI
+        llm = ChatGoogleGenerativeAI(model="gemini-1.5-flash", google_api_key=api_key)
+
+        prompt = """You are a Senior Telecom Customer Retention Expert.
+
+Generate a structured Markdown knowledge base article with advanced retention strategies.
+Focus ONLY on scenarios not covered by standard playbooks:
+- Digital-native customers who interact exclusively via app or online portal
+- High-value enterprise and SMB account retention
+- Win-back strategies for customers who previously churned and returned
+- Seasonal billing spike complaints (e.g., holiday periods, data-heavy events)
+- Bundle downgrade behavior as an early churn predictor
+- Customers who are loyal but have a high-value competitor offer
+
+Format EVERY strategy exactly like this:
+
+## [Category Name]
+
+### [Specific Scenario Title]
+* **Strategy**: One-line description of the approach
+* **Tactics**:
+  * Specific action 1
+  * Specific action 2
+  * Specific action 3
+* **Rationale**: One sentence explaining the business logic behind this strategy
+
+Output ONLY the Markdown content, no preamble or closing remarks."""
+
+        print("[KB Enrichment] Generating additional strategies via Gemini...")
+        response = llm.invoke(prompt)
+        content = response.content if hasattr(response, "content") else str(response)
+
+        timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
+        output_path = os.path.join(KB_DIR, f"ai_enriched_{timestamp}.md")
+
+        header = (
+            f"# AI-Generated Retention Strategies\n\n"
+            f"> Auto-generated by Gemini on "
+            f"{datetime.datetime.now().strftime('%Y-%m-%d %H:%M')}. "
+            f"Review before using in production.\n\n"
+        )
+
+        with open(output_path, "w", encoding="utf-8") as f:
+            f.write(header + content)
+
+        print(f"[KB Enrichment] Saved → {os.path.basename(output_path)}")
+
+    except Exception as e:
+        print(f"[KB Enrichment] Enrichment failed (non-critical): {e}")
+
+
+# --- Embeddings ---
+
+def _get_embeddings() -> HuggingFaceEmbeddings:
+    return HuggingFaceEmbeddings(
         model_name="sentence-transformers/all-MiniLM-L6-v2",
-        model_kwargs={'device': 'cpu'}
+        model_kwargs={"device": "cpu"},
     )
 
-    # Building the vector store and saving it locally to avoid re-embedding every time.
-    db = FAISS.from_documents(md_header_splits, embeddings)
-    
+
+# --- Core Build & Retrieval ---
+
+def create_vector_db(force: bool = False) -> FAISS:
+    """
+    Build (or rebuild) the FAISS vectorstore from all files in knowledge_base/.
+
+    - Skips rebuild if KB hash matches the last build and force=False.
+    - Auto-enriches via Gemini if fewer than ENRICHMENT_THRESHOLD chunks are found.
+    - Saves a manifest so future calls can skip re-embedding unchanged content.
+    """
+    current_hash = compute_kb_hash()
+    manifest = get_manifest()
+
+    if (
+        not force
+        and manifest.get("kb_hash") == current_hash
+        and os.path.exists(DB_FAISS_PATH)
+    ):
+        print("[RAG] KB unchanged — loading existing vectorstore.")
+        return FAISS.load_local(
+            DB_FAISS_PATH, _get_embeddings(), allow_dangerous_deserialization=True
+        )
+
+    print("[RAG] Building vectorstore from knowledge_base/...")
+    docs = _load_all_documents()
+
+    # Threshold-based enrichment: only call Gemini if KB is thin
+    if len(docs) < ENRICHMENT_THRESHOLD:
+        print(
+            f"[RAG] {len(docs)} chunks found (threshold: {ENRICHMENT_THRESHOLD}). "
+            "Enriching with Gemini..."
+        )
+        _enrich_with_llm()
+        docs = _load_all_documents()  # Reload after enrichment
+
+    if not docs:
+        raise ValueError(
+            "No documents found in knowledge_base/. "
+            "Please add at least one .md or .txt file."
+        )
+
+    embeddings = _get_embeddings()
+    db = FAISS.from_documents(docs, embeddings)
+
     os.makedirs(os.path.dirname(DB_FAISS_PATH), exist_ok=True)
     db.save_local(DB_FAISS_PATH)
+
+    # Recompute hash after potential enrichment (new files may have been added)
+    final_hash = compute_kb_hash()
+    kb_files = get_kb_files()
+    _save_manifest(
+        {
+            "kb_hash": final_hash,
+            "files": [os.path.basename(f) for f in kb_files],
+            "total_chunks": len(docs),
+            "last_built": datetime.datetime.now().isoformat(),
+        }
+    )
+
+    print(
+        f"[RAG] Done — {len(docs)} chunks indexed from {len(kb_files)} file(s)."
+    )
     return db
 
-def get_vector_db():
+
+def get_vector_db() -> FAISS:
     """
-    Retrieves the existing vector store or creates a new one if it's missing.
+    Returns the FAISS vectorstore. Automatically rebuilds if the KB has
+    changed since the last build (hash mismatch).
     """
-    embeddings = HuggingFaceEmbeddings(
-        model_name="sentence-transformers/all-MiniLM-L6-v2",
-        model_kwargs={'device': 'cpu'}
-    )
-    
-    if os.path.exists(DB_FAISS_PATH):
-        return FAISS.load_local(DB_FAISS_PATH, embeddings, allow_dangerous_deserialization=True)
-    else:
-        return create_vector_db()
+    current_hash = compute_kb_hash()
+    manifest = get_manifest()
+
+    if manifest.get("kb_hash") == current_hash and os.path.exists(DB_FAISS_PATH):
+        return FAISS.load_local(
+            DB_FAISS_PATH, _get_embeddings(), allow_dangerous_deserialization=True
+        )
+
+    return create_vector_db()
+
+
+# --- Metadata Helper ---
+
+def list_kb_articles() -> list[dict]:
+    """Return metadata for each KB file (name, size, modified, source type)."""
+    articles = []
+    for fpath in get_kb_files():
+        stat = os.stat(fpath)
+        fname = os.path.basename(fpath)
+        articles.append(
+            {
+                "filename": fname,
+                "size_bytes": stat.st_size,
+                "last_modified": datetime.datetime.fromtimestamp(
+                    stat.st_mtime
+                ).isoformat(),
+                "is_ai_generated": fname.startswith("ai_enriched_"),
+            }
+        )
+    return articles
+
 
 if __name__ == "__main__":
-    # Allows for manual refresh of the knowledge base from the terminal.
-    create_vector_db()
+    # Manual force-rebuild from terminal: python rag_utils.py
+    create_vector_db(force=True)

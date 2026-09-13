@@ -32,35 +32,61 @@ export default function Strategist({ customerData, churnProb, setActiveTab }: St
     setProgress(5);
 
     try {
-      const res = await fetch(`${API_URL}/strategy`, {
+      const res = await fetch(`${API_URL}/strategy/stream`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           customer_data: customerData,
           churn_prob: churnProb,
-          user_query: query
-        })
+          user_query: query,
+        }),
       });
 
-      if (!res.ok) {
-        throw new Error("Strategy generation failed");
+      if (!res.ok || !res.body) {
+        throw new Error("Strategy stream failed to start");
       }
 
-      const json = await res.json();
-      const rawLogs = json.thought_log || [];
-      
-      // Simulate real-time progress through logs for premium feel
-      setProgress(20);
-      for (let i = 0; i < rawLogs.length; i++) {
-        await new Promise(resolve => setTimeout(resolve, 800));
-        setLogs(prev => [...prev, rawLogs[i]]);
-        setProgress(20 + Math.round(((i + 1) / rawLogs.length) * 70));
+      // ── Real-time SSE consumption via ReadableStream ──────────────────────
+      const reader = res.body.getReader();
+      const decoder = new TextDecoder();
+      let buffer = "";
+      let eventCount = 0;
+
+      while (true) {
+        const { value, done } = await reader.read();
+        if (done) break;
+
+        buffer += decoder.decode(value, { stream: true });
+        const parts = buffer.split("\n\n");
+        // Keep the last (possibly incomplete) chunk in the buffer
+        buffer = parts.pop() ?? "";
+
+        for (const part of parts) {
+          const line = part.trim();
+          if (!line.startsWith("data:")) continue;
+
+          try {
+            const payload = JSON.parse(line.slice(5).trim());
+
+            if (payload.type === "log") {
+              eventCount++;
+              setLogs(prev => [...prev, payload.message]);
+              // Advance progress naturally between 10% and 90%
+              setProgress(Math.min(90, 10 + eventCount * 12));
+
+            } else if (payload.type === "done") {
+              setReport(payload.report);
+              setActiveProvider(payload.provider);
+              setProgress(100);
+
+            } else if (payload.type === "error") {
+              throw new Error(payload.message);
+            }
+          } catch (_) {
+            // Malformed SSE chunk — skip
+          }
+        }
       }
-      
-      await new Promise(resolve => setTimeout(resolve, 400));
-      setReport(json.final_report);
-      setActiveProvider(json.active_provider);
-      setProgress(100);
     } catch (e) {
       console.error(e);
       alert("Failed to compile strategist plan. Ensure backend model is operational.");
