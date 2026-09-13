@@ -1,13 +1,14 @@
 import os
 from typing import TypedDict, List
-from dotenv import load_dotenv
+from dotenv import load_dotenv, find_dotenv
 from langgraph.graph import StateGraph, END
 from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_groq import ChatGroq
 from langchain_mistralai import ChatMistralAI
 from rag_utils import get_vector_db
 
-load_dotenv()
+ENV_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), ".env")
+load_dotenv(ENV_PATH)
 
 # We define the shape of our agent's memory here. 
 # This state is passed between nodes to keep the 'Chain of Thought' intact.
@@ -31,12 +32,14 @@ def get_llm_response(prompt: str, log: List[str], state: AgentState):
     providers = [
         {"name": "Google Gemini", "env_key": "GOOGLE_API_KEY", "class": ChatGoogleGenerativeAI, "model": "gemini-flash-latest"},
         {"name": "Groq (Llama 3)", "env_key": "GROQ_API_KEY", "class": ChatGroq, "model": "llama-3.3-70b-versatile"},
-        {"name": "Mistral AI", "env_key": "MISTRAL_API_KEY", "class": ChatMistralAI, "model": "mistral-large-latest"},
+        {"name": "Mistral AI", "env_key": "MISTRAL_API_KEY", "class": ChatMistralAI, "model": "open-mistral-7b"},
     ]
     
+    valid_keys_found = False
     for provider in providers:
         api_key = os.getenv(provider["env_key"])
-        if api_key and api_key != "your_api_key_here":
+        if api_key and not api_key.startswith("your_") and "api_key_here" not in api_key:
+            valid_keys_found = True
             try:
                 # Configuring the specific LLM client
                 if provider["name"] == "Google Gemini":
@@ -57,7 +60,9 @@ def get_llm_response(prompt: str, log: List[str], state: AgentState):
                 log.append(f"[lucide:alert-triangle] {provider['name']} failed: {str(e)[:100]}...")
                 continue
     
-    # If all AI providers fail, we signal the switch to Heuristic Mode.
+    # If no valid keys are set, or all providers fail, switch to Heuristic Mode
+    if not valid_keys_found:
+        log.append("[lucide:info] No API keys configured in .env (add Gemini, Groq, or Mistral key for live LLM reasoning).")
     return None, "Heuristic Mode"
 
 def analyze_customer(state: AgentState):

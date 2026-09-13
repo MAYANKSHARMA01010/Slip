@@ -148,22 +148,16 @@ if [ "$ONLY_FRONTEND" = false ]; then
     echo ""
     echo -e "${BLUE}⚙️  [2/4] Validating configurations & datasets...${NC}"
 
-    # Verify Root .env
-    if [ ! -f "$ROOT_DIR/.env" ] && [ -f "$ROOT_DIR/.env.example" ]; then
-        echo -e "  ${YELLOW}⚠️  Root .env missing. Creating from .env.example...${NC}"
-        cp "$ROOT_DIR/.env.example" "$ROOT_DIR/.env"
+    # Ensure backend .env is present
+    if [ ! -f "$ROOT_DIR/backend/.env" ] && [ -f "$ROOT_DIR/backend/.env.example" ]; then
+        echo -e "  ${YELLOW}⚠️  backend/.env missing. Creating from backend/.env.example...${NC}"
+        cp "$ROOT_DIR/backend/.env.example" "$ROOT_DIR/backend/.env"
     fi
 
-    # Sync .env to backend
-    if [ -f "$ROOT_DIR/.env" ] && [ ! -f "$ROOT_DIR/backend/.env" ]; then
-        echo -e "  ${CYAN}Copying .env to backend/.env...${NC}"
-        cp "$ROOT_DIR/.env" "$ROOT_DIR/backend/.env"
-    fi
-
-    # Frontend .env.local
-    if [ ! -f "$ROOT_DIR/frontend/.env.local" ]; then
-        echo -e "  ${CYAN}Creating frontend/.env.local (NEXT_PUBLIC_API_URL=http://localhost:7860)...${NC}"
-        echo "NEXT_PUBLIC_API_URL=http://localhost:7860" > "$ROOT_DIR/frontend/.env.local"
+    # Ensure frontend .env is present
+    if [ ! -f "$ROOT_DIR/frontend/.env" ] && [ -f "$ROOT_DIR/frontend/.env.example" ]; then
+        echo -e "  ${CYAN}Creating frontend/.env from frontend/.env.example...${NC}"
+        cp "$ROOT_DIR/frontend/.env.example" "$ROOT_DIR/frontend/.env"
     fi
 
     # Check Git LFS on CSV file

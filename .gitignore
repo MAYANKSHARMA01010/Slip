@@ -1,6 +1,9 @@
-# Dependencies
+# Dependencies & Package Managers
 node_modules/
 .pnpm-store/
+.next/
+out/
+next-env.d.ts
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
@@ -138,8 +141,11 @@ celerybeat.pid
 # SageMath parsed files
 *.sage.py
 
-# Environments
+# Environments & Local Secrets
 .env
+.env.*
+*.env
+!.env.example
 .envrc
 .venv
 env/

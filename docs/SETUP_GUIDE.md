@@ -45,7 +45,7 @@ pip install -r backend/requirements.txt
 Before you begin, ensure you have the following installed:
 - **Python 3.9+** (Check with `python3 --version`)
 - **Git** (Check with `git --version`)
-- **API Keys**: To use the "AI Strategist" features, you'll need a **Google Gemini**, **Groq**, or **Mistral** API key in your `.env` file.
+- **API Keys**: To use the "AI Strategist" features, you'll need a **Google Gemini**, **Groq**, or **Mistral** API key in your `backend/.env` file.
 
 ### Step 1: Clone the Project
 You can clone the project from either GitHub or directly from the Hugging Face Space.
