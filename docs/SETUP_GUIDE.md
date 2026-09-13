@@ -2,19 +2,39 @@
 
 This guide will help you get the **Slip Intelligence Platform** up and running on your local machine in just a few minutes.
 
-## 🚀 Quick Start (macOS/Linux)
+## 🚀 Quick Start (One Command Runner)
 
-If you're already familiar with Python environments, run these commands to launch the dashboard:
+The easiest way to launch the entire platform (FastAPI backend + Next.js frontend) is using the master runner script:
 
 ```bash
-# 1. Prepare your environment
+# 1. Start full-stack services (cleans ports, sets up .venv & pnpm packages, and starts servers)
+./scripts/dev.sh
+
+# Or run all services including the Streamlit dashboard:
+./scripts/dev.sh --all
+
+# Or use pnpm from the root:
+pnpm dev
+```
+
+---
+
+## 🛠️ Alternative / Manual Setup
+
+If you prefer running services individually:
+
+```bash
+# 1. Prepare your root environment
 python3 -m venv .venv && source .venv/bin/activate
 
 # 2. Synchronize libraries
 pip install -r requirements.txt
+pip install -r backend/requirements.txt
 
-# 3. Launch Slip
-streamlit run app.py
+# 3. Launch specific services
+./script/dev.sh --backend    # FastAPI on http://localhost:7860
+./script/dev.sh --frontend   # Next.js on http://localhost:3000
+./script/dev.sh --streamlit  # Streamlit on http://localhost:8501
 ```
 
 ---
