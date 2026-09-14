@@ -19,3 +19,8 @@ font = "sans serif"
 # spam caused by Streamlit scanning every submodule in the transformers
 # package. The app does not use hot-reload-sensitive code, so this is safe.
 fileWatcherType = "none"
+enableCORS = false
+enableXsrfProtection = false
+
+[browser]
+gatherUsageStats = false
