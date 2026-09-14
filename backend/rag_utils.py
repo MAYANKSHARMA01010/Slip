@@ -103,7 +103,7 @@ def _enrich_with_llm():
             return
 
         from langchain_google_genai import ChatGoogleGenerativeAI
-        llm = ChatGoogleGenerativeAI(model="gemini-1.5-flash", google_api_key=api_key)
+        llm = ChatGoogleGenerativeAI(model="gemini-2.0-flash", google_api_key=api_key)
 
         prompt = """You are a Senior Telecom Customer Retention Expert.
 
