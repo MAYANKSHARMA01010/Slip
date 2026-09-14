@@ -8,28 +8,34 @@ RUN apt-get update && apt-get install -y \
     git \
     && rm -rf /var/lib/apt/lists/*
 
-# Set up user 1000 (Hugging Face Spaces non-root requirement)
+# Set up user 1000 (Hugging Face Spaces requirement)
 RUN useradd -m -u 1000 user
 ENV HOME=/home/user \
     PATH=/home/user/.local/bin:$PATH
 
 WORKDIR $HOME/app
 
-# Copy requirements first for better layer caching
+# Copy requirements first for Docker layer caching
 COPY --chown=user:user requirements.txt $HOME/app/requirements.txt
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy all files into container owned by user
+# Copy application files
 COPY --chown=user:user . $HOME/app
+
+# Pre-build ML model artifacts inside the image
+RUN python scripts/build_artifacts.py
+
+# Ensure user owns all files in home directory and has full write permissions
+RUN chown -R user:user /home/user && chmod -R 777 /home/user
 
 # Switch to non-root user
 USER user
 
-# Expose port 7860 (Hugging Face default port)
+# Expose port 7860 (Hugging Face Spaces default port)
 EXPOSE 7860
 
 # Healthcheck
 HEALTHCHECK CMD curl --fail http://localhost:7860/_stcore/health || exit 1
 
-# Command to run Streamlit on port 7860 with iframe embedding enabled
+# Command to run Streamlit on port 7860 with iframe compatibility
 ENTRYPOINT ["streamlit", "run", "app.py", "--server.port=7860", "--server.address=0.0.0.0", "--server.enableCORS=false", "--server.enableXsrfProtection=false"]

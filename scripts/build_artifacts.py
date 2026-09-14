@@ -1,0 +1,38 @@
+import pandas as pd
+import joblib
+from sklearn.model_selection import train_test_split
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.pipeline import Pipeline
+from sklearn.compose import ColumnTransformer
+from sklearn.preprocessing import StandardScaler, OneHotEncoder
+
+def build():
+    print("Building model artifacts from telco_customer_churn.csv...")
+    df = pd.read_csv("telco_customer_churn.csv").drop(columns=["customerID"])
+    df["TotalCharges"] = df["TotalCharges"].replace({" ": "0.0"}).astype(float)
+    df["SeniorCitizen"] = df["SeniorCitizen"].astype(int)
+    df["gender"] = df["gender"].astype(str)
+
+    X = df.drop("Churn", axis=1)
+    y = df["Churn"].map({"Yes": 1, "No": 0})
+    categorical_cols = X.select_dtypes(include=["object"]).columns.tolist()
+    numeric_cols = X.select_dtypes(include=["int64", "float64"]).columns.tolist()
+
+    preprocessor = ColumnTransformer([
+        ("num", StandardScaler(), numeric_cols),
+        ("cat", OneHotEncoder(handle_unknown="ignore", sparse_output=False), categorical_cols),
+    ])
+
+    pipeline = Pipeline([
+        ("preprocessor", preprocessor),
+        ("clf", RandomForestClassifier(n_estimators=50, random_state=42)),
+    ])
+
+    X_train, _, y_train, _ = train_test_split(X, y, test_size=0.2, random_state=42)
+    pipeline.fit(X_train, y_train)
+    joblib.dump(pipeline, "model_pipeline.pkl")
+    joblib.dump(X.columns.tolist(), "feature_columns.pkl")
+    print("✅ Model artifacts (model_pipeline.pkl, feature_columns.pkl) created successfully!")
+
+if __name__ == "__main__":
+    build()
