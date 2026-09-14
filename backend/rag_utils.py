@@ -232,13 +232,20 @@ def get_vector_db() -> FAISS:
     Returns the FAISS vectorstore. Automatically rebuilds if the KB has
     changed since the last build (hash mismatch).
     """
-    current_hash = compute_kb_hash()
-    manifest = get_manifest()
+    index_faiss = os.path.join(DB_FAISS_PATH, "index.faiss")
+    index_pkl = os.path.join(DB_FAISS_PATH, "index.pkl")
 
-    if manifest.get("kb_hash") == current_hash and os.path.exists(DB_FAISS_PATH):
-        return FAISS.load_local(
-            DB_FAISS_PATH, _get_embeddings(), allow_dangerous_deserialization=True
-        )
+    if (
+        manifest.get("kb_hash") == current_hash
+        and os.path.exists(index_faiss)
+        and os.path.exists(index_pkl)
+    ):
+        try:
+            return FAISS.load_local(
+                DB_FAISS_PATH, _get_embeddings(), allow_dangerous_deserialization=True
+            )
+        except Exception:
+            return create_vector_db()
 
     return create_vector_db()
 

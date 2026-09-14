@@ -49,8 +49,15 @@ def get_vector_db():
         model_kwargs={'device': 'cpu'}
     )
     
-    if os.path.exists(DB_FAISS_PATH):
-        return FAISS.load_local(DB_FAISS_PATH, embeddings, allow_dangerous_deserialization=True)
+    index_faiss = os.path.join(DB_FAISS_PATH, "index.faiss")
+    index_pkl = os.path.join(DB_FAISS_PATH, "index.pkl")
+
+    if os.path.exists(index_faiss) and os.path.exists(index_pkl):
+        try:
+            return FAISS.load_local(DB_FAISS_PATH, embeddings, allow_dangerous_deserialization=True)
+        except Exception as e:
+            print(f"Warning: Failed to load local vectorstore ({e}), rebuilding...")
+            return create_vector_db()
     else:
         return create_vector_db()
 
